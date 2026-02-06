@@ -1,0 +1,23 @@
+{
+  "name": "@indexall/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.8.2",
+    "@indexall/shared": "workspace:*",
+    "@trpc/server": "^10.45.1",
+    "better-sqlite3": "^9.4.3",
+    "drizzle-orm": "^0.29.4",
+    "hono": "^4.0.8",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.20.14",
+    "tsx": "^4.7.1"
+  }
+}
