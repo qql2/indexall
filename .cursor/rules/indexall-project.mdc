@@ -1,0 +1,64 @@
+---
+description: IndexAll 项目全局上下文。提供项目定位、技术栈摘要、设计文档索引和文档维护指令。
+alwaysApply: true
+---
+
+# IndexAll - 统一资源索引平台
+
+## 项目定位
+
+跨系统资源索引器（不是书签管理器）。用 DAG 标签体系统一索引所有平台的资源（网页、GitHub repo、Notion 页面等），在本平台检索浏览，一键跳转到原始页面。
+
+**当前开发阶段：Phase 1 MVP** — 覆盖"给资源分类 + 检索 + 跳转"基本闭环。
+
+## 技术栈
+
+| 层面 | 选型 |
+|---|---|
+| Monorepo | pnpm workspaces |
+| 前端 | React + Vite + TailwindCSS + shadcn/ui |
+| 后端 | Hono + tRPC + Drizzle + SQLite (better-sqlite3) |
+| 浏览器扩展 | WXT (React + TypeScript) |
+| API 层 | tRPC（前后端类型直连） |
+
+## 项目结构
+
+```
+indexall/
+├── packages/
+│   ├── web/          # React 前端（Vite）
+│   ├── server/       # Hono 后端 + tRPC
+│   ├── extension/    # WXT 浏览器扩展
+│   └── shared/       # 共享类型、常量
+```
+
+## 设计文档索引
+
+在以下场景中，**必须先用 Read 工具读取**对应文档再开始编码：
+
+| 触发场景 | 必读文档 |
+|---|---|
+| 产品决策、功能范围、Phase 规划 | `REQUIREMENTS.md` |
+| 架构决策、技术选型、Connector 设计 | `DESIGN.md` |
+| 数据库 schema、SQL 查询、表结构变更 | `MODEL.md` |
+| tRPC router、API 接口定义与实现 | `API_DESIGN.md` |
+| UI 组件、页面布局、交互行为、响应式 | `UI_DESIGN.md` |
+
+当不确定某个功能是否在当前 Phase 范围内时，先读 `REQUIREMENTS.md` 确认。
+
+## 文档维护规则
+
+代码变更涉及以下内容时，**完成编码后必须同步更新**对应文档：
+
+| 代码变更类型 | 更新文档 |
+|---|---|
+| 新增/修改/删除数据库表或字段 | `MODEL.md` |
+| 新增/修改/删除 tRPC procedure | `API_DESIGN.md` |
+| 新增/修改 UI 组件、页面布局、交互模式 | `UI_DESIGN.md` |
+| 架构变更、技术栈调整、项目结构变化 | `DESIGN.md` |
+| 需求变更、功能增减 | `REQUIREMENTS.md` |
+
+文档更新原则：
+- 保持文档与代码一致，不留过时信息
+- 更新时保持原有文档风格和结构
+- 如果变更较大需要更新多个文档，逐个更新并告知用户
