@@ -1,42 +1,79 @@
 package main
 
 import (
-	"fmt"
-	"net"
+	"flag"
 	"os"
-	"os/signal"
-	"syscall"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
+	"github.com/go-kratos/kratos/v2"
+	"github.com/go-kratos/kratos/v2/config"
+	"github.com/go-kratos/kratos/v2/config/file"
+	"github.com/go-kratos/kratos/v2/log"
+	"github.com/go-kratos/kratos/v2/transport/grpc"
+	"github.com/go-kratos/kratos/v2/transport/http"
 
-	indexallv1 "github.com/construct/indexall/internal/gen/pb/proto/indexall/v1"
+	"github.com/construct/indexall/internal/conf"
 	"github.com/construct/indexall/internal/db"
+	"github.com/construct/indexall/internal/server"
 	"github.com/construct/indexall/internal/service"
 )
 
+// go build -ldflags "-X main.Version=x.y.z"
+var (
+	// Name is the name of the compiled software.
+	Name string
+	// Version is the version of the compiled software.
+	Version string
+	// flagconf is the config flag.
+	flagconf string
+
+	id, _ = os.Hostname()
+)
+
+func init() {
+	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
+}
+
+func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
+	return kratos.New(
+		kratos.ID(id),
+		kratos.Name(Name),
+		kratos.Version(Version),
+		kratos.Metadata(map[string]string{}),
+		kratos.Logger(logger),
+		kratos.Server(
+			gs,
+			hs,
+		),
+	)
+}
+
 func main() {
-	// Configuration
-	dbPath := "indexall.db"
-	port := 50051 // Standard gRPC port
+	flag.Parse()
+	logger := log.With(log.NewStdLogger(os.Stdout),
+		"ts", log.DefaultTimestamp,
+		"caller", log.DefaultCaller,
+	)
 
-	// Parse flags or environment variables
-	if path := os.Getenv("DB_PATH"); path != "" {
-		dbPath = path
-	}
-	if portStr := os.Getenv("PORT"); portStr != "" {
-		fmt.Sscanf(portStr, "%d", &port)
+	c := config.New(
+		config.WithSource(
+			file.NewSource(flagconf),
+		),
+	)
+	defer c.Close()
+
+	if err := c.Load(); err != nil {
+		panic(err)
 	}
 
-	fmt.Printf("Starting IndexAll gRPC server...\n")
-	fmt.Printf("Database: %s\n", dbPath)
-	fmt.Printf("Port: %d\n", port)
+	var bc conf.Bootstrap
+	if err := c.Scan(&bc); err != nil {
+		panic(err)
+	}
 
 	// Initialize database
-	database, err := db.InitDB(dbPath)
+	database, err := db.InitDB(bc.Data.Database.Source)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to initialize database: %v\n", err)
-		os.Exit(1)
+		panic(err)
 	}
 	defer database.Close()
 
@@ -47,40 +84,13 @@ func main() {
 	tagService := service.NewTagService(database, queries)
 	resourceService := service.NewResourceService(database, queries)
 
-	// Create gRPC server
-	grpcServer := grpc.NewServer()
-	defer grpcServer.GracefulStop()
+	// Create gRPC and HTTP servers
+	gs := server.NewGRPCServer(bc.Server, tagService, resourceService, logger)
+	hs := server.NewHTTPServer(bc.Server, tagService, resourceService, logger)
 
-	// Register services
-	indexallv1.RegisterTagServiceServer(grpcServer, tagService)
-	indexallv1.RegisterResourceServiceServer(grpcServer, resourceService)
-
-	// Register reflection for debugging
-	reflection.Register(grpcServer)
-
-	// Create listener
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to listen: %v\n", err)
-		os.Exit(1)
+	// Create and run Kratos app
+	app := newApp(logger, gs, hs)
+	if err := app.Run(); err != nil {
+		panic(err)
 	}
-
-	// Start server in a goroutine
-	go func() {
-		fmt.Printf("✓ gRPC server listening on %s\n", listener.Addr())
-		if err := grpcServer.Serve(listener); err != nil {
-			fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
-		}
-	}()
-
-	// Wait for interrupt signal
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	<-sigChan
-
-	// Graceful shutdown
-	fmt.Println("\nShutting down server...")
-	grpcServer.GracefulStop()
-
-	fmt.Println("✓ Server stopped gracefully")
 }

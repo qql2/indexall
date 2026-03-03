@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	indexallv1 "github.com/construct/indexall/internal/gen/pb/proto/indexall/v1"
+	indexallv1 "github.com/construct/indexall/api/indexall/v1"
 	"github.com/construct/indexall/internal/db/gen"
 )
 

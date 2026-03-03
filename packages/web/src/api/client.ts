@@ -5,9 +5,10 @@
  * The backend serves both gRPC and HTTP (via gRPC-Gateway) on the same port.
  */
 
-const API_BASE_URL = typeof window !== 'undefined' && (window as any).__ENV?.API_URL
-  ? (window as any).__ENV.API_URL
-  : 'http://localhost:50051';
+const API_BASE_URL =
+  typeof window !== "undefined" && (window as any).__ENV?.API_URL
+    ? (window as any).__ENV.API_URL
+    : "";
 
 export interface ApiError {
   code: string;
@@ -17,14 +18,14 @@ export interface ApiError {
 async function makeRequest<T>(
   method: string,
   path: string,
-  body?: unknown
+  body?: unknown,
 ): Promise<T> {
   const url = `${API_BASE_URL}/v1${path}`;
 
   const options: RequestInit = {
     method,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   };
 
@@ -40,9 +41,9 @@ async function makeRequest<T>(
       throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
-    return await response.json() as T;
+    return (await response.json()) as T;
   } catch (error) {
-    console.error('API request failed:', error);
+    console.error("API request failed:", error);
     throw error;
   }
 }
@@ -140,37 +141,43 @@ export interface AddAliasResponse {
 
 export const tagApi = {
   create: (data: CreateTagRequest) =>
-    makeRequest<CreateTagResponse>('POST', '/tags', data),
+    makeRequest<CreateTagResponse>("POST", "/tags", data),
 
   update: (id: string, data: UpdateTagRequest) =>
-    makeRequest<UpdateTagResponse>('PATCH', `/tags/${id}`, {
+    makeRequest<UpdateTagResponse>("PATCH", `/tags/${id}`, {
       ...data,
       id: undefined, // Remove id from body
     }),
 
   delete: (id: string) =>
-    makeRequest<{ success: boolean }>('DELETE', `/tags/${id}`),
+    makeRequest<{ success: boolean }>("DELETE", `/tags/${id}`),
 
-  list: () =>
-    makeRequest<ListTagsResponse>('GET', '/tags'),
+  list: () => makeRequest<ListTagsResponse>("GET", "/tags"),
 
-  getTree: () =>
-    makeRequest<GetTreeResponse>('GET', '/tags/tree'),
+  getTree: () => makeRequest<GetTreeResponse>("GET", "/tags/tree"),
 
   search: (query: string) =>
-    makeRequest<SearchTagsResponse>('GET', `/tags/search?query=${encodeURIComponent(query)}`),
+    makeRequest<SearchTagsResponse>(
+      "GET",
+      `/tags/search?query=${encodeURIComponent(query)}`,
+    ),
 
   addAlias: (tagId: string, alias: string) =>
-    makeRequest<AddAliasResponse>('POST', `/tags/${tagId}/aliases`, { alias }),
+    makeRequest<AddAliasResponse>("POST", `/tags/${tagId}/aliases`, { alias }),
 
   removeAlias: (aliasId: string) =>
-    makeRequest<{ success: boolean }>('DELETE', `/tags/aliases/${aliasId}`),
+    makeRequest<{ success: boolean }>("DELETE", `/tags/aliases/${aliasId}`),
 
   addParent: (childId: string, parentId: string) =>
-    makeRequest<{ success: boolean }>('POST', `/tags/${childId}/parents`, { parent_id: parentId }),
+    makeRequest<{ success: boolean }>("POST", `/tags/${childId}/parents`, {
+      parent_id: parentId,
+    }),
 
   removeParent: (childId: string, parentId: string) =>
-    makeRequest<{ success: boolean }>('DELETE', `/tags/${childId}/parents/${parentId}`),
+    makeRequest<{ success: boolean }>(
+      "DELETE",
+      `/tags/${childId}/parents/${parentId}`,
+    ),
 };
 
 // ============================================================================
@@ -322,54 +329,59 @@ export interface GetByUrlResponse {
 
 export const resourceApi = {
   create: (data: CreateResourceRequest) =>
-    makeRequest<CreateResourceResponse>('POST', '/resources', data),
+    makeRequest<CreateResourceResponse>("POST", "/resources", data),
 
   update: (id: string, data: UpdateResourceRequest) =>
-    makeRequest<UpdateResourceResponse>('PATCH', `/resources/${id}`, {
+    makeRequest<UpdateResourceResponse>("PATCH", `/resources/${id}`, {
       ...data,
       id: undefined, // Remove id from body
     }),
 
   delete: (id: string) =>
-    makeRequest<{ success: boolean }>('DELETE', `/resources/${id}`),
+    makeRequest<{ success: boolean }>("DELETE", `/resources/${id}`),
 
   get: (id: string) =>
-    makeRequest<GetResourceResponse>('GET', `/resources/${id}`),
+    makeRequest<GetResourceResponse>("GET", `/resources/${id}`),
 
   list: (req?: ListResourcesRequest) => {
     const params = new URLSearchParams();
-    if (req?.tag_id) params.append('tag_id', req.tag_id);
-    if (req?.status) params.append('status', req.status.toString());
-    params.append('page', (req?.page || 1).toString());
-    params.append('page_size', (req?.page_size || 10).toString());
+    if (req?.tag_id) params.append("tag_id", req.tag_id);
+    if (req?.status) params.append("status", req.status.toString());
+    params.append("page", (req?.page || 1).toString());
+    params.append("page_size", (req?.page_size || 10).toString());
     return makeRequest<ListResourcesResponse>(
-      'GET',
-      `/resources?${params.toString()}`
+      "GET",
+      `/resources?${params.toString()}`,
     );
   },
 
   search: (req: SearchResourcesRequest) => {
     const params = new URLSearchParams();
-    params.append('query', req.query);
-    params.append('page', (req.page || 1).toString());
-    params.append('page_size', (req.page_size || 10).toString());
+    params.append("query", req.query);
+    params.append("page", (req.page || 1).toString());
+    params.append("page_size", (req.page_size || 10).toString());
     return makeRequest<SearchResourcesResponse>(
-      'GET',
-      `/resources/search?${params.toString()}`
+      "GET",
+      `/resources/search?${params.toString()}`,
     );
   },
 
   getByUrl: (url: string) =>
     makeRequest<GetByUrlResponse>(
-      'GET',
-      `/resources/by-url?url=${encodeURIComponent(url)}`
+      "GET",
+      `/resources/by-url?url=${encodeURIComponent(url)}`,
     ),
 
   addTag: (resourceId: string, tagId: string) =>
-    makeRequest<{ success: boolean }>('POST', `/resources/${resourceId}/tags`, { tag_id: tagId }),
+    makeRequest<{ success: boolean }>("POST", `/resources/${resourceId}/tags`, {
+      tag_id: tagId,
+    }),
 
   removeTag: (resourceId: string, tagId: string) =>
-    makeRequest<{ success: boolean }>('DELETE', `/resources/${resourceId}/tags/${tagId}`),
+    makeRequest<{ success: boolean }>(
+      "DELETE",
+      `/resources/${resourceId}/tags/${tagId}`,
+    ),
 };
 
 export default {
