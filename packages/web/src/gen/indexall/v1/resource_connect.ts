@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AddTagRequest, AddTagResponse, CreateResourceRequest, CreateResourceResponse, DeleteResourceRequest, DeleteResourceResponse, GetByUrlRequest, GetByUrlResponse, GetResourceRequest, GetResourceResponse, ListResourcesRequest, ListResourcesResponse, RemoveTagRequest, RemoveTagResponse, SearchResourcesRequest, SearchResourcesResponse, UpdateResourceRequest, UpdateResourceResponse } from "./resource_pb";
+import { AddTagRequest, AddTagResponse, CreateResourceRequest, CreateResourceResponse, DeleteResourceRequest, DeleteResourceResponse, GetByUrlRequest, GetByUrlResponse, GetResourceRequest, GetResourceResponse, ListResourcesRequest, ListResourcesResponse, RemoveTagRequest, RemoveTagResponse, SearchResourcesRequest, SearchResourcesResponse, UpdateResourceRequest, UpdateResourceResponse } from "./resource_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**

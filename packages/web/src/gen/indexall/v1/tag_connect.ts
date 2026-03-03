@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AddAliasRequest, AddAliasResponse, AddParentRequest, AddParentResponse, CreateTagRequest, CreateTagResponse, DeleteTagRequest, DeleteTagResponse, GetTreeRequest, GetTreeResponse, ListTagsRequest, ListTagsResponse, RemoveAliasRequest, RemoveAliasResponse, RemoveParentRequest, RemoveParentResponse, SearchTagsRequest, SearchTagsResponse, UpdateTagRequest, UpdateTagResponse } from "./tag_pb";
+import { CreateTagRequestSchema, CreateTagResponseSchema, UpdateTagRequestSchema, UpdateTagResponseSchema, DeleteTagRequestSchema, DeleteTagResponseSchema, ListTagsRequestSchema, ListTagsResponseSchema, GetTreeRequestSchema, GetTreeResponseSchema, SearchTagsRequestSchema, SearchTagsResponseSchema, AddAliasRequestSchema, AddAliasResponseSchema, RemoveAliasRequestSchema, RemoveAliasResponseSchema, AddParentRequestSchema, AddParentResponseSchema, RemoveParentRequestSchema, RemoveParentResponseSchema } from "./tag_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -17,8 +17,8 @@ export const TagService = {
      */
     create: {
       name: "Create",
-      I: CreateTagRequest,
-      O: CreateTagResponse,
+      I: CreateTagRequestSchema,
+      O: CreateTagResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -26,8 +26,8 @@ export const TagService = {
      */
     update: {
       name: "Update",
-      I: UpdateTagRequest,
-      O: UpdateTagResponse,
+      I: UpdateTagRequestSchema,
+      O: UpdateTagResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
