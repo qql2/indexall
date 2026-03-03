@@ -1,0 +1,1 @@
+{"manifest_version":3,"name":"IndexAll","version":"0.1.0","permissions":["activeTab","storage"],"action":{"default_popup":"popup.html"}}

@@ -1,12 +1,21 @@
 import { useState, useEffect } from 'react';
 import { tagApi, TagListItem } from '../api/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Trash2, Plus, AlertCircle } from 'lucide-react';
 
 export default function TagManagement() {
   const [tags, setTags] = useState<TagListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newTagName, setNewTagName] = useState('');
-  const [newTagColor, setNewTagColor] = useState('');
+  const [newTagColor, setNewTagColor] = useState('#2563eb');
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const loadTags = async () => {
     setLoading(true);
@@ -35,7 +44,8 @@ export default function TagManagement() {
         color: newTagColor || undefined,
       });
       setNewTagName('');
-      setNewTagColor('');
+      setNewTagColor('#2563eb');
+      setCreateDialogOpen(false);
       await loadTags();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create tag');
@@ -43,6 +53,8 @@ export default function TagManagement() {
   };
 
   const handleDeleteTag = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this tag?')) return;
+
     try {
       await tagApi.delete(id);
       await loadTags();
@@ -52,87 +64,130 @@ export default function TagManagement() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Create Tag Form */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Tag</h2>
-        <form onSubmit={handleCreateTag} className="space-y-4">
-          <div className="flex gap-4">
-            <input
-              type="text"
-              placeholder="Tag name"
-              value={newTagName}
-              onChange={(e) => setNewTagName(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <input
-              type="color"
-              placeholder="Color"
-              value={newTagColor}
-              onChange={(e) => setNewTagColor(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg"
-            />
-            <button
-              type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-            >
-              Create
-            </button>
-          </div>
-        </form>
+    <div className="space-y-6">
+      {/* Header with Create Button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Tag Management</h1>
+          <p className="text-gray-600 mt-1">Create and organize your tags with hierarchical structure</p>
+        </div>
+        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button size="lg">
+              <Plus className="w-4 h-4 mr-2" />
+              New Tag
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Tag</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateTag} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="tag-name">Tag Name</Label>
+                <Input
+                  id="tag-name"
+                  placeholder="e.g., Frontend, Documentation, Important"
+                  value={newTagName}
+                  onChange={(e) => setNewTagName(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="tag-color">Color</Label>
+                <div className="flex gap-2">
+                  <input
+                    id="tag-color"
+                    type="color"
+                    value={newTagColor}
+                    onChange={(e) => setNewTagColor(e.target.value)}
+                    className="w-12 h-10 rounded cursor-pointer"
+                  />
+                  <Input
+                    type="text"
+                    value={newTagColor}
+                    onChange={(e) => setNewTagColor(e.target.value)}
+                    placeholder="#2563eb"
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+              <Button type="submit" className="w-full">
+                Create Tag
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Error Message */}
+      {/* Error Alert */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-          {error}
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {/* Tags List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Tags</h2>
-        </div>
-
-        {loading ? (
-          <div className="px-6 py-12 text-center text-gray-500">Loading...</div>
-        ) : tags.length === 0 ? (
-          <div className="px-6 py-12 text-center text-gray-500">
-            No tags yet. Create one above!
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-200">
-            {tags.map((tag) => (
-              <div
-                key={tag.id}
-                className="px-6 py-4 flex items-center justify-between hover:bg-gray-50"
-              >
-                <div className="flex items-center gap-4 flex-1">
-                  {tag.color && (
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: tag.color }}
-                    />
-                  )}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">{tag.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      {tag.aliases.length} aliases • {tag.resource_count} resources
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleDeleteTag(tag.id)}
-                  className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium"
-                >
-                  Delete
-                </button>
+      <Card>
+        <CardHeader>
+          <CardTitle>All Tags ({tags.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-gray-500">Loading tags...</p>
+            </div>
+          ) : tags.length === 0 ? (
+            <div className="flex items-center justify-center py-12 text-center">
+              <div>
+                <p className="text-gray-500 mb-4">No tags yet. Create one to get started!</p>
+                <Button onClick={() => setCreateDialogOpen(true)}>Create First Tag</Button>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {tags.map((tag) => (
+                <div
+                  key={tag.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {tag.color && (
+                      <div
+                        className="w-4 h-4 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: tag.color }}
+                        title={tag.color}
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-gray-900">{tag.name}</h3>
+                      <div className="flex gap-2 mt-1">
+                        {tag.aliases.length > 0 && (
+                          <Badge variant="secondary" className="text-xs">
+                            {tag.aliases.length} alias{tag.aliases.length !== 1 ? 'es' : ''}
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="text-xs">
+                          {tag.resource_count} resource{tag.resource_count !== 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteTag(tag.id)}
+                    className="ml-2 flex-shrink-0"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-600" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
