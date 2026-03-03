@@ -1,55 +1,77 @@
 import { useState } from 'react';
 import TagManagement from './pages/TagManagement';
 import ResourceManagement from './pages/ResourceManagement';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Search, Tags, FileText } from 'lucide-react';
 import './App.css';
 
-type Tab = 'tags' | 'resources';
+type Tab = 'resources' | 'tags';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('tags');
+  const [activeTab, setActiveTab] = useState<Tab>('resources');
+  const [searchQuery, setSearchQuery] = useState('');
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">IndexAll</h1>
-          <p className="text-gray-600 mt-1">Unified Resource Indexing Platform</p>
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg">
+                <FileText className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">IndexAll</h1>
+                <p className="text-xs text-gray-500">Unified Resource Indexing</p>
+              </div>
+            </div>
+
+            {/* Search Bar */}
+            <div className="flex-1 min-w-64 max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search resources, tags..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex space-x-8">
-            <button
-              onClick={() => setActiveTab('tags')}
-              className={`px-3 py-4 border-b-2 font-medium text-sm ${
-                activeTab === 'tags'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-              }`}
-            >
-              Tags
-            </button>
-            <button
-              onClick={() => setActiveTab('resources')}
-              className={`px-3 py-4 border-b-2 font-medium text-sm ${
-                activeTab === 'resources'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-              }`}
-            >
-              Resources
-            </button>
-          </div>
-        </div>
-      </nav>
-
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {activeTab === 'tags' && <TagManagement />}
-        {activeTab === 'resources' && <ResourceManagement />}
+      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value: string) => setActiveTab(value as Tab)}
+          className="w-full"
+        >
+          <TabsList className="grid w-full max-w-xs grid-cols-2">
+            <TabsTrigger value="resources" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Resources</span>
+            </TabsTrigger>
+            <TabsTrigger value="tags" className="flex items-center gap-2">
+              <Tags className="w-4 h-4" />
+              <span className="hidden sm:inline">Tags</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="resources" className="mt-6">
+            <ResourceManagement searchQuery={searchQuery} />
+          </TabsContent>
+
+          <TabsContent value="tags" className="mt-6">
+            <TagManagement />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
