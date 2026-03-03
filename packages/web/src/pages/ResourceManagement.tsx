@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react';
 import { resourceApi, ResourceListItem } from '../api/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { ExternalLink, Trash2, Plus, AlertCircle, FileText } from 'lucide-react';
 
 export default function ResourceManagement() {
   const [resources, setResources] = useState<ResourceListItem[]>([]);
@@ -7,6 +15,8 @@ export default function ResourceManagement() {
   const [error, setError] = useState<string | null>(null);
   const [newResourceTitle, setNewResourceTitle] = useState('');
   const [newResourceUrl, setNewResourceUrl] = useState('');
+  const [newResourceDescription, setNewResourceDescription] = useState('');
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const loadResources = async () => {
     setLoading(true);
@@ -36,9 +46,12 @@ export default function ResourceManagement() {
       await resourceApi.create({
         title: newResourceTitle,
         url: newResourceUrl || undefined,
+        description: newResourceDescription || undefined,
       });
       setNewResourceTitle('');
       setNewResourceUrl('');
+      setNewResourceDescription('');
+      setCreateDialogOpen(false);
       await loadResources();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create resource');
@@ -46,6 +59,8 @@ export default function ResourceManagement() {
   };
 
   const handleDeleteResource = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this resource?')) return;
+
     try {
       await resourceApi.delete(id);
       await loadResources();
@@ -55,114 +70,155 @@ export default function ResourceManagement() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Create Resource Form */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Add New Resource</h2>
-        <form onSubmit={handleCreateResource} className="space-y-4">
-          <div className="flex gap-4">
-            <input
-              type="text"
-              placeholder="Resource title"
-              value={newResourceTitle}
-              onChange={(e) => setNewResourceTitle(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <input
-              type="url"
-              placeholder="URL (optional)"
-              value={newResourceUrl}
-              onChange={(e) => setNewResourceUrl(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <button
-              type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-            >
-              Add
-            </button>
-          </div>
-        </form>
+    <div className="space-y-6">
+      {/* Header with Create Button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Resource Management</h1>
+          <p className="text-gray-600 mt-1">Organize and manage your resources across all platforms</p>
+        </div>
+        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button size="lg">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Resource
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Resource</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateResource} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="resource-title">Title *</Label>
+                <Input
+                  id="resource-title"
+                  placeholder="Resource title"
+                  value={newResourceTitle}
+                  onChange={(e) => setNewResourceTitle(e.target.value)}
+                  autoFocus
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="resource-url">URL</Label>
+                <Input
+                  id="resource-url"
+                  type="url"
+                  placeholder="https://example.com"
+                  value={newResourceUrl}
+                  onChange={(e) => setNewResourceUrl(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="resource-description">Description</Label>
+                <textarea
+                  id="resource-description"
+                  placeholder="Add notes or description..."
+                  value={newResourceDescription}
+                  onChange={(e) => setNewResourceDescription(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={3}
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                Add Resource
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Error Message */}
+      {/* Error Alert */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-          {error}
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      {/* Resources List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Resources</h2>
+      {/* Resources Grid */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-gray-500">Loading resources...</p>
         </div>
-
-        {loading ? (
-          <div className="px-6 py-12 text-center text-gray-500">Loading...</div>
-        ) : resources.length === 0 ? (
-          <div className="px-6 py-12 text-center text-gray-500">
-            No resources yet. Add one above!
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-200">
-            {resources.map((resource) => (
-              <div
-                key={resource.id}
-                className="px-6 py-4 hover:bg-gray-50"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium text-gray-900">
+      ) : resources.length === 0 ? (
+        <Card>
+          <CardContent className="flex items-center justify-center py-12 text-center">
+            <div>
+              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 mb-4">No resources yet. Add one to get started!</p>
+              <Button onClick={() => setCreateDialogOpen(true)}>Add First Resource</Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {resources.map((resource) => (
+            <Card key={resource.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    {/* Title as Link */}
+                    <div className="flex items-center gap-2">
                       {resource.url ? (
                         <a
                           href={resource.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
+                          className="text-lg font-semibold text-blue-600 hover:underline flex items-center gap-1 break-all"
                         >
                           {resource.title}
+                          <ExternalLink className="w-4 h-4 flex-shrink-0" />
                         </a>
                       ) : (
-                        resource.title
+                        <h3 className="text-lg font-semibold text-gray-900">{resource.title}</h3>
                       )}
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Source: {resource.source} • Created: {new Date(resource.created_at).toLocaleDateString()}
+                    </div>
+
+                    {/* Metadata */}
+                    <p className="text-xs text-gray-500 mt-1">
+                      {resource.source} • {new Date(resource.created_at).toLocaleDateString()}
                     </p>
+
+                    {/* Description */}
+                    {resource.description && (
+                      <p className="text-sm text-gray-600 mt-2 line-clamp-2">{resource.description}</p>
+                    )}
+
+                    {/* Tags */}
+                    {resource.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {resource.tags.map((tag) => (
+                          <Badge
+                            key={tag.id}
+                            style={{
+                              backgroundColor: tag.color || '#6B7280',
+                              color: 'white',
+                            }}
+                          >
+                            {tag.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <button
+
+                  {/* Delete Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => handleDeleteResource(resource.id)}
-                    className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium ml-4"
+                    className="flex-shrink-0"
                   >
-                    Delete
-                  </button>
+                    <Trash2 className="w-4 h-4 text-red-600" />
+                  </Button>
                 </div>
-
-                {resource.description && (
-                  <p className="text-sm text-gray-600 mb-2">{resource.description}</p>
-                )}
-
-                {resource.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {resource.tags.map((tag) => (
-                      <span
-                        key={tag.id}
-                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium text-white"
-                        style={{
-                          backgroundColor: tag.color || '#6B7280',
-                        }}
-                      >
-                        {tag.name}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
