@@ -33,6 +33,12 @@ export interface GetByUrlResponse {
   };
 }
 
+export interface CreateTagRequest {
+  name: string;
+  color?: string;
+  parent_ids?: string[];
+}
+
 async function makeRequest<T>(method: string, path: string, body?: unknown): Promise<T> {
   const url = `${API_BASE_URL}/v1${path}`;
 
@@ -67,6 +73,9 @@ export const api = {
 
   searchTags: (query: string) =>
     makeRequest<SearchTagsResponse>('GET', `/tags/search?query=${encodeURIComponent(query)}`),
+
+  createTag: (data: CreateTagRequest) =>
+    makeRequest<TagListItem>('POST', '/tags', data),
 
   createResource: (data: CreateResourceRequest) =>
     makeRequest<{ id: string; title: string }>('POST', '/resources', data),
