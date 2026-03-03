@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package indexall.v1;
 
+import "google/api/annotations.proto";
+
 option go_package = "github.com/construct/indexall/internal/gen/pb/indexall/v1;indexallv1";
 
 // ResourceStatus defines the state of a resource
@@ -182,13 +184,52 @@ message RemoveTagResponse {
 }
 
 service ResourceService {
-  rpc Create(CreateResourceRequest) returns (CreateResourceResponse);
-  rpc Update(UpdateResourceRequest) returns (UpdateResourceResponse);
-  rpc Delete(DeleteResourceRequest) returns (DeleteResourceResponse);
-  rpc Get(GetResourceRequest) returns (GetResourceResponse);
-  rpc List(ListResourcesRequest) returns (ListResourcesResponse);
-  rpc Search(SearchResourcesRequest) returns (SearchResourcesResponse);
-  rpc GetByUrl(GetByUrlRequest) returns (GetByUrlResponse);
-  rpc AddTag(AddTagRequest) returns (AddTagResponse);
-  rpc RemoveTag(RemoveTagRequest) returns (RemoveTagResponse);
+  rpc Create(CreateResourceRequest) returns (CreateResourceResponse) {
+    option (google.api.http) = {
+      post: "/v1/resources"
+      body: "*"
+    };
+  };
+  rpc Update(UpdateResourceRequest) returns (UpdateResourceResponse) {
+    option (google.api.http) = {
+      patch: "/v1/resources/{id}"
+      body: "*"
+    };
+  };
+  rpc Delete(DeleteResourceRequest) returns (DeleteResourceResponse) {
+    option (google.api.http) = {
+      delete: "/v1/resources/{id}"
+    };
+  };
+  rpc Get(GetResourceRequest) returns (GetResourceResponse) {
+    option (google.api.http) = {
+      get: "/v1/resources/{id}"
+    };
+  };
+  rpc List(ListResourcesRequest) returns (ListResourcesResponse) {
+    option (google.api.http) = {
+      get: "/v1/resources"
+    };
+  };
+  rpc Search(SearchResourcesRequest) returns (SearchResourcesResponse) {
+    option (google.api.http) = {
+      get: "/v1/resources/search"
+    };
+  };
+  rpc GetByUrl(GetByUrlRequest) returns (GetByUrlResponse) {
+    option (google.api.http) = {
+      get: "/v1/resources/by-url"
+    };
+  };
+  rpc AddTag(AddTagRequest) returns (AddTagResponse) {
+    option (google.api.http) = {
+      post: "/v1/resources/{resource_id}/tags"
+      body: "*"
+    };
+  };
+  rpc RemoveTag(RemoveTagRequest) returns (RemoveTagResponse) {
+    option (google.api.http) = {
+      delete: "/v1/resources/{resource_id}/tags/{tag_id}"
+    };
+  };
 }
