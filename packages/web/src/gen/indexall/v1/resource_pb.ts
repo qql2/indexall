@@ -2,17 +2,9 @@
 // @generated from file indexall/v1/resource.proto (package indexall.v1, syntax proto3)
 /* eslint-disable */
 
+import type { GenEnum, GenFile, GenMessage, GenService } from "./codegenv2-shim";
+import { enumDesc, fileDesc, messageDesc, serviceDesc } from "./codegenv2-shim";
 import type { Message } from "@bufbuild/protobuf";
-
-// Shim for codegen metadata functions
-const enumDesc = () => ({});
-const fileDesc = () => ({});
-const messageDesc = () => ({});
-const serviceDesc = () => ({});
-type GenEnum = any;
-type GenFile = any;
-type GenMessage<T> = any;
-type GenService = any;
 
 /**
  * Describes the file indexall/v1/resource.proto.
@@ -823,6 +815,30 @@ export enum MatchSource {
  */
 export const MatchSourceSchema: GenEnum<MatchSource> = /*@__PURE__*/
   enumDesc(file_indexall_v1_resource, 1);
+
+// Re-export message constructors for protoc-gen-connect-es compatibility
+export const ResourceTag = ResourceTagSchema;
+export const Resource = ResourceSchema;
+export const CreateResourceRequest = CreateResourceRequestSchema;
+export const CreateResourceResponse = CreateResourceResponseSchema;
+export const UpdateResourceRequest = UpdateResourceRequestSchema;
+export const UpdateResourceResponse = UpdateResourceResponseSchema;
+export const DeleteResourceRequest = DeleteResourceRequestSchema;
+export const DeleteResourceResponse = DeleteResourceResponseSchema;
+export const GetResourceRequest = GetResourceRequestSchema;
+export const GetResourceResponse = GetResourceResponseSchema;
+export const ListResourcesRequest = ListResourcesRequestSchema;
+export const ListResourcesResponse = ListResourcesResponseSchema;
+export const ResourceListItem = ResourceListItemSchema;
+export const SearchResourcesRequest = SearchResourcesRequestSchema;
+export const SearchResourcesResponse = SearchResourcesResponseSchema;
+export const ResourceSearchResult = ResourceSearchResultSchema;
+export const GetByUrlRequest = GetByUrlRequestSchema;
+export const GetByUrlResponse = GetByUrlResponseSchema;
+export const AddTagRequest = AddTagRequestSchema;
+export const AddTagResponse = AddTagResponseSchema;
+export const RemoveTagRequest = RemoveTagRequestSchema;
+export const RemoveTagResponse = RemoveTagResponseSchema;
 
 /**
  * @generated from service indexall.v1.ResourceService
