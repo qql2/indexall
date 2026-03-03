@@ -35,8 +35,8 @@ export const TagService = {
      */
     delete: {
       name: "Delete",
-      I: DeleteTagRequest,
-      O: DeleteTagResponse,
+      I: DeleteTagRequestSchema,
+      O: DeleteTagResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -44,8 +44,8 @@ export const TagService = {
      */
     list: {
       name: "List",
-      I: ListTagsRequest,
-      O: ListTagsResponse,
+      I: ListTagsRequestSchema,
+      O: ListTagsResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -53,8 +53,8 @@ export const TagService = {
      */
     getTree: {
       name: "GetTree",
-      I: GetTreeRequest,
-      O: GetTreeResponse,
+      I: GetTreeRequestSchema,
+      O: GetTreeResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -62,8 +62,8 @@ export const TagService = {
      */
     search: {
       name: "Search",
-      I: SearchTagsRequest,
-      O: SearchTagsResponse,
+      I: SearchTagsRequestSchema,
+      O: SearchTagsResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -71,8 +71,8 @@ export const TagService = {
      */
     addAlias: {
       name: "AddAlias",
-      I: AddAliasRequest,
-      O: AddAliasResponse,
+      I: AddAliasRequestSchema,
+      O: AddAliasResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -80,8 +80,8 @@ export const TagService = {
      */
     removeAlias: {
       name: "RemoveAlias",
-      I: RemoveAliasRequest,
-      O: RemoveAliasResponse,
+      I: RemoveAliasRequestSchema,
+      O: RemoveAliasResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -89,8 +89,8 @@ export const TagService = {
      */
     addParent: {
       name: "AddParent",
-      I: AddParentRequest,
-      O: AddParentResponse,
+      I: AddParentRequestSchema,
+      O: AddParentResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -98,8 +98,8 @@ export const TagService = {
      */
     removeParent: {
       name: "RemoveParent",
-      I: RemoveParentRequest,
-      O: RemoveParentResponse,
+      I: RemoveParentRequestSchema,
+      O: RemoveParentResponseSchema,
       kind: MethodKind.Unary,
     },
   }

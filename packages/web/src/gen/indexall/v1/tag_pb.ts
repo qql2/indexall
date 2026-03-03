@@ -579,28 +579,6 @@ export type RemoveParentResponse = Message<"indexall.v1.RemoveParentResponse"> &
 export const RemoveParentResponseSchema: GenMessage<RemoveParentResponse> = /*@__PURE__*/
   messageDesc(file_indexall_v1_tag, 23);
 
-// Re-export message constructors for protoc-gen-connect-es compatibility
-export const CreateTagRequest = CreateTagRequestSchema;
-export const CreateTagResponse = CreateTagResponseSchema;
-export const UpdateTagRequest = UpdateTagRequestSchema;
-export const UpdateTagResponse = UpdateTagResponseSchema;
-export const DeleteTagRequest = DeleteTagRequestSchema;
-export const DeleteTagResponse = DeleteTagResponseSchema;
-export const ListTagsRequest = ListTagsRequestSchema;
-export const ListTagsResponse = ListTagsResponseSchema;
-export const GetTreeRequest = GetTreeRequestSchema;
-export const GetTreeResponse = GetTreeResponseSchema;
-export const SearchTagsRequest = SearchTagsRequestSchema;
-export const SearchTagsResponse = SearchTagsResponseSchema;
-export const AddAliasRequest = AddAliasRequestSchema;
-export const AddAliasResponse = AddAliasResponseSchema;
-export const RemoveAliasRequest = RemoveAliasRequestSchema;
-export const RemoveAliasResponse = RemoveAliasResponseSchema;
-export const AddParentRequest = AddParentRequestSchema;
-export const AddParentResponse = AddParentResponseSchema;
-export const RemoveParentRequest = RemoveParentRequestSchema;
-export const RemoveParentResponse = RemoveParentResponseSchema;
-
 /**
  * @generated from service indexall.v1.TagService
  */

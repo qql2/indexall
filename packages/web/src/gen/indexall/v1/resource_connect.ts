@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AddTagRequest, AddTagResponse, CreateResourceRequest, CreateResourceResponse, DeleteResourceRequest, DeleteResourceResponse, GetByUrlRequest, GetByUrlResponse, GetResourceRequest, GetResourceResponse, ListResourcesRequest, ListResourcesResponse, RemoveTagRequest, RemoveTagResponse, SearchResourcesRequest, SearchResourcesResponse, UpdateResourceRequest, UpdateResourceResponse } from "./resource_pb.js";
+import { CreateResourceRequestSchema, CreateResourceResponseSchema, UpdateResourceRequestSchema, UpdateResourceResponseSchema, DeleteResourceRequestSchema, DeleteResourceResponseSchema, GetResourceRequestSchema, GetResourceResponseSchema, ListResourcesRequestSchema, ListResourcesResponseSchema, SearchResourcesRequestSchema, SearchResourcesResponseSchema, GetByUrlRequestSchema, GetByUrlResponseSchema, AddTagRequestSchema, AddTagResponseSchema, RemoveTagRequestSchema, RemoveTagResponseSchema } from "./resource_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -17,8 +17,8 @@ export const ResourceService = {
      */
     create: {
       name: "Create",
-      I: CreateResourceRequest,
-      O: CreateResourceResponse,
+      I: CreateResourceRequestSchema,
+      O: CreateResourceResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -26,8 +26,8 @@ export const ResourceService = {
      */
     update: {
       name: "Update",
-      I: UpdateResourceRequest,
-      O: UpdateResourceResponse,
+      I: UpdateResourceRequestSchema,
+      O: UpdateResourceResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -35,8 +35,8 @@ export const ResourceService = {
      */
     delete: {
       name: "Delete",
-      I: DeleteResourceRequest,
-      O: DeleteResourceResponse,
+      I: DeleteResourceRequestSchema,
+      O: DeleteResourceResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -44,8 +44,8 @@ export const ResourceService = {
      */
     get: {
       name: "Get",
-      I: GetResourceRequest,
-      O: GetResourceResponse,
+      I: GetResourceRequestSchema,
+      O: GetResourceResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -53,8 +53,8 @@ export const ResourceService = {
      */
     list: {
       name: "List",
-      I: ListResourcesRequest,
-      O: ListResourcesResponse,
+      I: ListResourcesRequestSchema,
+      O: ListResourcesResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -62,8 +62,8 @@ export const ResourceService = {
      */
     search: {
       name: "Search",
-      I: SearchResourcesRequest,
-      O: SearchResourcesResponse,
+      I: SearchResourcesRequestSchema,
+      O: SearchResourcesResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -71,8 +71,8 @@ export const ResourceService = {
      */
     getByUrl: {
       name: "GetByUrl",
-      I: GetByUrlRequest,
-      O: GetByUrlResponse,
+      I: GetByUrlRequestSchema,
+      O: GetByUrlResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -80,8 +80,8 @@ export const ResourceService = {
      */
     addTag: {
       name: "AddTag",
-      I: AddTagRequest,
-      O: AddTagResponse,
+      I: AddTagRequestSchema,
+      O: AddTagResponseSchema,
       kind: MethodKind.Unary,
     },
     /**
@@ -89,8 +89,8 @@ export const ResourceService = {
      */
     removeTag: {
       name: "RemoveTag",
-      I: RemoveTagRequest,
-      O: RemoveTagResponse,
+      I: RemoveTagRequestSchema,
+      O: RemoveTagResponseSchema,
       kind: MethodKind.Unary,
     },
   }
