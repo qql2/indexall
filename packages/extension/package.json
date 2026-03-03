@@ -12,9 +12,9 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "^1.4.0",
     "@connectrpc/connect": "^1.1.0",
     "@connectrpc/connect-web": "^1.1.0",
-    "@bufbuild/protobuf": "^1.4.0",
     "@indexall/shared": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
