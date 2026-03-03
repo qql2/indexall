@@ -14,6 +14,10 @@ export default function Popup() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<TagListItem[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [showCreateTag, setShowCreateTag] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagColor, setNewTagColor] = useState('#2563eb');
+  const [creatingTag, setCreatingTag] = useState(false);
 
   useEffect(() => {
     // Get current tab info
@@ -90,6 +94,31 @@ export default function Popup() {
 
   const handleRemoveTag = (tagId: string) => {
     setSelectedTags(selectedTags.filter((t) => t.id !== tagId));
+  };
+
+  const handleCreateTag = async () => {
+    if (!newTagName.trim()) return;
+
+    setCreatingTag(true);
+    setError(null);
+
+    try {
+      const newTag = await api.createTag({
+        name: newTagName,
+        color: newTagColor,
+      });
+      setTags([...tags, newTag]);
+      setSelectedTags([...selectedTags, newTag]);
+      setNewTagName('');
+      setNewTagColor('#2563eb');
+      setShowCreateTag(false);
+      setSearchQuery('');
+      setSearchResults([]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create tag');
+    } finally {
+      setCreatingTag(false);
+    }
   };
 
   const handleSave = async () => {
@@ -174,7 +203,55 @@ export default function Popup() {
 
         {/* Tags */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Tags</label>
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-medium text-gray-700">Tags</label>
+            <button
+              onClick={() => setShowCreateTag(!showCreateTag)}
+              className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+            >
+              + New Tag
+            </button>
+          </div>
+
+          {/* Create Tag Form */}
+          {showCreateTag && (
+            <div className="p-3 border border-blue-200 bg-blue-50 rounded-md space-y-2">
+              <input
+                type="text"
+                placeholder="Tag name"
+                value={newTagName}
+                onChange={(e) => setNewTagName(e.target.value)}
+                autoFocus
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyPress={(e) => e.key === 'Enter' && handleCreateTag()}
+              />
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={newTagColor}
+                  onChange={(e) => setNewTagColor(e.target.value)}
+                  className="w-10 h-8 rounded cursor-pointer"
+                />
+                <button
+                  onClick={handleCreateTag}
+                  disabled={creatingTag || !newTagName.trim()}
+                  className="flex-1 px-3 py-1 bg-blue-600 text-white text-xs rounded font-medium hover:bg-blue-700 disabled:bg-gray-400"
+                >
+                  {creatingTag ? 'Creating...' : 'Create'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCreateTag(false);
+                    setNewTagName('');
+                    setNewTagColor('#2563eb');
+                  }}
+                  className="px-3 py-1 border border-gray-300 text-gray-700 text-xs rounded hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           {selectedTags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
