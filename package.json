@@ -7,7 +7,10 @@
     "lint": "pnpm --filter \"*\" lint"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "prettier": "^3.2.5"
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.1.4"
   }
 }
