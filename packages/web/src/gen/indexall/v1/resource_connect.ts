@@ -4,7 +4,7 @@
 // @ts-nocheck
 
 import { CreateResourceRequestSchema, CreateResourceResponseSchema, UpdateResourceRequestSchema, UpdateResourceResponseSchema, DeleteResourceRequestSchema, DeleteResourceResponseSchema, GetResourceRequestSchema, GetResourceResponseSchema, ListResourcesRequestSchema, ListResourcesResponseSchema, SearchResourcesRequestSchema, SearchResourcesResponseSchema, GetByUrlRequestSchema, GetByUrlResponseSchema, AddTagRequestSchema, AddTagResponseSchema, RemoveTagRequestSchema, RemoveTagResponseSchema } from "./resource_pb.js";
-import { MethodKind } from "@bufbuild/protobuf";
+import { MethodKind } from "./codegenv2-shim.js";
 
 /**
  * @generated from service indexall.v1.ResourceService

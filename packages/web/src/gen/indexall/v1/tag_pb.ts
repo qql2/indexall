@@ -2,8 +2,8 @@
 // @generated from file indexall/v1/tag.proto (package indexall.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage, GenService } from "./codegenv2-shim";
-import { fileDesc, messageDesc, serviceDesc } from "./codegenv2-shim";
+import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
+import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Message } from "@bufbuild/protobuf";
 
 /**

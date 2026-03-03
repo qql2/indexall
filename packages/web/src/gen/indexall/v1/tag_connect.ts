@@ -4,7 +4,7 @@
 // @ts-nocheck
 
 import { CreateTagRequestSchema, CreateTagResponseSchema, UpdateTagRequestSchema, UpdateTagResponseSchema, DeleteTagRequestSchema, DeleteTagResponseSchema, ListTagsRequestSchema, ListTagsResponseSchema, GetTreeRequestSchema, GetTreeResponseSchema, SearchTagsRequestSchema, SearchTagsResponseSchema, AddAliasRequestSchema, AddAliasResponseSchema, RemoveAliasRequestSchema, RemoveAliasResponseSchema, AddParentRequestSchema, AddParentResponseSchema, RemoveParentRequestSchema, RemoveParentResponseSchema } from "./tag_pb.js";
-import { MethodKind } from "@bufbuild/protobuf";
+import { MethodKind } from "./codegenv2-shim.js";
 
 /**
  * @generated from service indexall.v1.TagService
