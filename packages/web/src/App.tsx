@@ -65,7 +65,7 @@ function App() {
           </TabsList>
 
           <TabsContent value="resources" className="mt-6">
-            <ResourceManagement />
+            <ResourceManagement searchQuery={searchQuery} />
           </TabsContent>
 
           <TabsContent value="tags" className="mt-6">
