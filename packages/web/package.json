@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@indexall/shared": "workspace:*",
-    "@trpc/client": "^10.45.1",
-    "@trpc/react-query": "^10.45.1",
+    "@connectrpc/connect": "^1.1.0",
+    "@connectrpc/connect-web": "^1.1.0",
+    "@bufbuild/protobuf": "^1.4.0",
     "@tanstack/react-query": "^4.36.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

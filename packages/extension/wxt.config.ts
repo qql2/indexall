@@ -6,5 +6,6 @@ export default defineConfig({
   manifest: {
     name: 'IndexAll',
     permissions: ['activeTab', 'storage'],
+    host_permissions: ['http://localhost:8080/*'],
   },
 });
