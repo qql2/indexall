@@ -19,9 +19,3 @@ plugins:
     opt:
       - paths=source_relative
       - generate_unbound_methods=true
-
-  # TypeScript code generation for web frontend (messages only)
-  - name: es
-    out: ../packages/web/src/gen
-    opt:
-      - target=ts
