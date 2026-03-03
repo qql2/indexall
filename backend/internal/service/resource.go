@@ -3,18 +3,21 @@ package service
 import (
 	"context"
 	"database/sql"
-	"errors"
-	"fmt"
 	"net/url"
 
-	"connectrpc.com/connect"
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
-	indexallv1 "github.com/construct/indexall/internal/gen/pb/indexall/v1"
+	indexallv1 "github.com/construct/indexall/internal/gen/pb/proto/indexall/v1"
 	"github.com/construct/indexall/internal/db/gen"
 )
 
+// Ensure ResourceService implements ResourceServiceServer interface
+var _ indexallv1.ResourceServiceServer = (*ResourceService)(nil)
+
 type ResourceService struct {
+	indexallv1.UnimplementedResourceServiceServer
 	db *sql.DB
 	q  *gen.Queries
 }
@@ -23,20 +26,20 @@ func NewResourceService(db *sql.DB, q *gen.Queries) *ResourceService {
 	return &ResourceService{db: db, q: q}
 }
 
-func (s *ResourceService) Create(ctx context.Context, req *connect.Request[indexallv1.CreateResourceRequest]) (*connect.Response[indexallv1.CreateResourceResponse], error) {
-	if req.Msg.Title == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("title is required"))
+func (s *ResourceService) Create(ctx context.Context, req *indexallv1.CreateResourceRequest) (*indexallv1.CreateResourceResponse, error) {
+	if req.Title == "" {
+		return nil, status.Error(codes.InvalidArgument, "title is required")
 	}
 
 	// Dereference pointer fields with defaults
 	source := "manual"
-	if req.Msg.Source != nil && *req.Msg.Source != "" {
-		source = *req.Msg.Source
+	if req.Source != nil && *req.Source != "" {
+		source = *req.Source
 	}
 
 	var externalID sql.NullString
-	if req.Msg.ExternalId != nil && *req.Msg.ExternalId != "" {
-		externalID = sql.NullString{String: *req.Msg.ExternalId, Valid: true}
+	if req.ExternalId != nil && *req.ExternalId != "" {
+		externalID = sql.NullString{String: *req.ExternalId, Valid: true}
 	}
 
 	// Check uniqueness of source + externalId if both provided
@@ -46,9 +49,9 @@ func (s *ResourceService) Create(ctx context.Context, req *connect.Request[index
 			ExternalID: externalID,
 		})
 		if err == nil {
-			return nil, connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("resource with source %q and external_id %q already exists", source, externalID.String))
+			return nil, status.Errorf(codes.AlreadyExists, "resource with source %q and external_id %q already exists", source, externalID.String)
 		} else if err != sql.ErrNoRows {
-			return nil, connect.NewError(connect.CodeInternal, err)
+			return nil, status.Errorf(codes.Internal, "failed to check resource: %v", err)
 		}
 	}
 
@@ -57,18 +60,18 @@ func (s *ResourceService) Create(ctx context.Context, req *connect.Request[index
 		ID:          resourceID,
 		Source:      source,
 		ExternalID:  externalID,
-		Title:       req.Msg.Title,
-		Description: pointerToNullString(req.Msg.Description),
-		Url:         pointerToNullString(req.Msg.Url),
-		OpenWith:    pointerToNullString(req.Msg.OpenWith),
+		Title:       req.Title,
+		Description: pointerToNullString(req.Description),
+		Url:         pointerToNullString(req.Url),
+		OpenWith:    pointerToNullString(req.OpenWith),
 		Metadata:    sql.NullString{Valid: false},
 	})
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to create resource: %w", err))
+		return nil, status.Errorf(codes.Internal, "failed to create resource: %v", err)
 	}
 
 	// Add tags
-	for _, tagID := range req.Msg.TagIds {
+	for _, tagID := range req.TagIds {
 		_ = s.q.AddTagToResource(ctx, gen.AddTagToResourceParams{
 			ResourceID: resourceID,
 			TagID:      tagID,
@@ -97,88 +100,84 @@ func (s *ResourceService) Create(ctx context.Context, req *connect.Request[index
 		CreatedAt: nullTimeToString(resource.CreatedAt),
 	}
 
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
-func (s *ResourceService) Update(ctx context.Context, req *connect.Request[indexallv1.UpdateResourceRequest]) (*connect.Response[indexallv1.UpdateResourceResponse], error) {
-	if req.Msg.Id == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("resource id is required"))
+func (s *ResourceService) Update(ctx context.Context, req *indexallv1.UpdateResourceRequest) (*indexallv1.UpdateResourceResponse, error) {
+	if req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "id is required")
 	}
 
 	// Verify resource exists
-	existingResource, err := s.q.GetResource(ctx, req.Msg.Id)
+	existing, err := s.q.GetResource(ctx, req.Id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, connect.NewError(connect.CodeNotFound, errors.New("resource not found"))
+			return nil, status.Error(codes.NotFound, "resource not found")
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, status.Errorf(codes.Internal, "failed to get resource: %v", err)
 	}
 
 	// Use existing values if not provided
-	updateTitle := existingResource.Title
-	if req.Msg.Title != nil && *req.Msg.Title != "" {
-		updateTitle = *req.Msg.Title
+	title := existing.Title
+	if req.Title != nil && *req.Title != "" {
+		title = *req.Title
 	}
 
 	err = s.q.UpdateResource(ctx, gen.UpdateResourceParams{
-		ID:          req.Msg.Id,
-		Title:       updateTitle,
-		Description: pointerToNullString(req.Msg.Description),
-		Url:         pointerToNullString(req.Msg.Url),
-		OpenWith:    pointerToNullString(req.Msg.OpenWith),
+		ID:          req.Id,
+		Title:       title,
+		Description: pointerToNullString(req.Description),
+		Url:         pointerToNullString(req.Url),
+		OpenWith:    pointerToNullString(req.OpenWith),
 	})
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to update resource: %w", err))
+		return nil, status.Errorf(codes.Internal, "failed to update resource: %v", err)
 	}
 
-	return connect.NewResponse(&indexallv1.UpdateResourceResponse{
+	return &indexallv1.UpdateResourceResponse{
 		Success: true,
-	}), nil
+	}, nil
 }
 
-func (s *ResourceService) Delete(ctx context.Context, req *connect.Request[indexallv1.DeleteResourceRequest]) (*connect.Response[indexallv1.DeleteResourceResponse], error) {
-	if req.Msg.Id == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("resource id is required"))
+func (s *ResourceService) Delete(ctx context.Context, req *indexallv1.DeleteResourceRequest) (*indexallv1.DeleteResourceResponse, error) {
+	if req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "id is required")
 	}
 
 	// Verify resource exists
-	if _, err := s.q.GetResource(ctx, req.Msg.Id); err != nil {
+	if _, err := s.q.GetResource(ctx, req.Id); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, connect.NewError(connect.CodeNotFound, errors.New("resource not found"))
+			return nil, status.Error(codes.NotFound, "resource not found")
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, status.Errorf(codes.Internal, "failed to get resource: %v", err)
 	}
 
-	// Remove all tags
-	_ = s.q.RemoveAllTagsFromResource(ctx, req.Msg.Id)
-
-	// Delete the resource
-	err := s.q.DeleteResource(ctx, req.Msg.Id)
+	err := s.q.DeleteResource(ctx, req.Id)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to delete resource: %w", err))
+		return nil, status.Errorf(codes.Internal, "failed to delete resource: %v", err)
 	}
 
-	return connect.NewResponse(&indexallv1.DeleteResourceResponse{
+	return &indexallv1.DeleteResourceResponse{
 		Success: true,
-	}), nil
+	}, nil
 }
 
-func (s *ResourceService) Get(ctx context.Context, req *connect.Request[indexallv1.GetResourceRequest]) (*connect.Response[indexallv1.GetResourceResponse], error) {
-	if req.Msg.Id == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("resource id is required"))
+func (s *ResourceService) Get(ctx context.Context, req *indexallv1.GetResourceRequest) (*indexallv1.GetResourceResponse, error) {
+	if req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "id is required")
 	}
 
-	resource, err := s.q.GetResource(ctx, req.Msg.Id)
+	resource, err := s.q.GetResource(ctx, req.Id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, connect.NewError(connect.CodeNotFound, errors.New("resource not found"))
+			return nil, status.Error(codes.NotFound, "resource not found")
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, status.Errorf(codes.Internal, "failed to get resource: %v", err)
 	}
 
 	// Get tags
 	tags := make([]*indexallv1.ResourceTag, 0)
-	tagRows, err := s.q.GetResourceTags(ctx, req.Msg.Id)
+	tagRows, err := s.q.GetResourceTags(ctx, req.Id)
 	if err == nil {
 		for _, t := range tagRows {
 			tags = append(tags, &indexallv1.ResourceTag{
@@ -189,13 +188,7 @@ func (s *ResourceService) Get(ctx context.Context, req *connect.Request[indexall
 		}
 	}
 
-	syncedAtStr := nullTimeToString(resource.SyncedAt)
-	var syncedAtPtr *string
-	if syncedAtStr != "" {
-		syncedAtPtr = &syncedAtStr
-	}
-
-	resp := &indexallv1.GetResourceResponse{
+	return &indexallv1.GetResourceResponse{
 		Id:          resource.ID,
 		Source:      resource.Source,
 		ExternalId:  nullStringToPointer(resource.ExternalID),
@@ -204,204 +197,145 @@ func (s *ResourceService) Get(ctx context.Context, req *connect.Request[indexall
 		Url:         nullStringToPointer(resource.Url),
 		OpenWith:    nullStringToPointer(resource.OpenWith),
 		Metadata:    nullStringToPointer(resource.Metadata),
-		Status:      statusToProto(resource.Status.String),
-		SyncedAt:    syncedAtPtr,
+		Status:      indexallv1.ResourceStatus(indexallv1.ResourceStatus_RESOURCE_STATUS_ACTIVE), // TODO: parse from resource.Status
 		CreatedAt:   nullTimeToString(resource.CreatedAt),
 		UpdatedAt:   nullTimeToString(resource.UpdatedAt),
 		Tags:        tags,
-	}
-
-	return connect.NewResponse(resp), nil
+	}, nil
 }
 
-func (s *ResourceService) List(ctx context.Context, req *connect.Request[indexallv1.ListResourcesRequest]) (*connect.Response[indexallv1.ListResourcesResponse], error) {
-	page := req.Msg.Page
-	if page < 1 {
-		page = 1
-	}
-	pageSize := req.Msg.PageSize
-	if pageSize < 1 {
-		pageSize = 20
-	}
-	if pageSize > 100 {
-		pageSize = 100
+func (s *ResourceService) List(ctx context.Context, req *indexallv1.ListResourcesRequest) (*indexallv1.ListResourcesResponse, error) {
+	var statusFilter sql.NullString
+	if req.Status != nil && *req.Status != indexallv1.ResourceStatus_RESOURCE_STATUS_UNSPECIFIED {
+		// Map proto enum to database string value
+		statusFilter = sql.NullString{String: req.Status.String(), Valid: true}
 	}
 
-	var resources []gen.Resource
-	var total int64
-	var err error
-
-	status := "active"
-	if req.Msg.Status != nil && *req.Msg.Status != indexallv1.ResourceStatus_RESOURCE_STATUS_UNSPECIFIED {
-		status = statusToString(*req.Msg.Status)
-	}
-
-	tagID := ""
-	if req.Msg.TagId != nil {
-		tagID = *req.Msg.TagId
-	}
-
-	if tagID != "" {
-		// Get by tag
-		resources, err = s.q.ListResourcesByTag(ctx, gen.ListResourcesByTagParams{
-			TagID:  tagID,
-			Status: stringToNullString(status),
-			Limit:  int64(pageSize),
-			Offset: int64((page - 1) * pageSize),
-		})
-		if err != nil {
-			resources = []gen.Resource{}
-		}
-
-		// Count
-		countRes, err := s.q.CountResourcesByTag(ctx, gen.CountResourcesByTagParams{
-			TagID:  tagID,
-			Status: stringToNullString(status),
-		})
-		if err == nil {
-			total = countRes
-		}
-	} else {
-		// List all
-		resources, err = s.q.ListResources(ctx, gen.ListResourcesParams{
-			Status: stringToNullString(status),
-			Limit:  int64(pageSize),
-			Offset: int64((page - 1) * pageSize),
-		})
-		if err != nil {
-			resources = []gen.Resource{}
-		}
-
-		// Count
-		countRes, err := s.q.CountResources(ctx, stringToNullString(status))
-		if err == nil {
-			total = countRes
-		}
-	}
-
-	// Build response
-	items := make([]*indexallv1.ResourceListItem, 0)
-	for _, r := range resources {
-		tags := make([]*indexallv1.ResourceTag, 0)
-		tagRows, _ := s.q.GetResourceTags(ctx, r.ID)
-		for _, t := range tagRows {
-			tags = append(tags, &indexallv1.ResourceTag{
-				Id:    t.TagID,
-				Name:  t.Name,
-				Color: nullStringToPointer(t.Color),
-			})
-		}
-
-		items = append(items, &indexallv1.ResourceListItem{
-			Id:          r.ID,
-			Source:      r.Source,
-			Title:       r.Title,
-			Description: nullStringToPointer(r.Description),
-			Url:         nullStringToPointer(r.Url),
-			Status:      statusToProto(r.Status.String),
-			CreatedAt:   nullTimeToString(r.CreatedAt),
-			Tags:        tags,
-		})
-	}
-
-	return connect.NewResponse(&indexallv1.ListResourcesResponse{
-		Items:    items,
-		Total:    int32(total),
-		Page:     int32(page),
-		PageSize: int32(pageSize),
-	}), nil
-}
-
-func (s *ResourceService) Search(ctx context.Context, req *connect.Request[indexallv1.SearchResourcesRequest]) (*connect.Response[indexallv1.SearchResourcesResponse], error) {
-	if req.Msg.Query == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("search query is required"))
-	}
-
-	page := req.Msg.Page
-	if page < 1 {
-		page = 1
-	}
-	pageSize := req.Msg.PageSize
-	if pageSize < 1 {
-		pageSize = 20
-	}
-	if pageSize > 100 {
-		pageSize = 100
-	}
-
-	query := "%" + req.Msg.Query + "%"
-	resources, err := s.q.SearchResources(ctx, gen.SearchResourcesParams{
-		Title: query,
-		Description: stringToNullString(query),
-		Limit:   int64(pageSize),
-		Offset:  int64((page - 1) * pageSize),
+	resources, err := s.q.ListResources(ctx, gen.ListResourcesParams{
+		Status: statusFilter,
+		Limit:  int64(req.PageSize),
+		Offset: int64((req.Page - 1) * req.PageSize),
 	})
 	if err != nil {
-		resources = []gen.SearchResourcesRow{}
+		return nil, status.Errorf(codes.Internal, "failed to list resources: %v", err)
 	}
 
-	// Count
-	countRes, err := s.q.CountSearchResults(ctx, gen.CountSearchResultsParams{
-		Title: query,
-		Description: stringToNullString(query),
-	})
-	var total int64
-	if err == nil {
-		total = countRes
-	}
+	// Get total count
+	count, _ := s.q.CountResources(ctx, statusFilter)
 
-	// Build response
-	items := make([]*indexallv1.ResourceSearchResult, 0)
-	for _, r := range resources {
+	items := make([]*indexallv1.ResourceListItem, len(resources))
+	for i, resource := range resources {
+		// Get tags
 		tags := make([]*indexallv1.ResourceTag, 0)
-		tagRows, _ := s.q.GetResourceTags(ctx, r.ID)
-		for _, t := range tagRows {
-			tags = append(tags, &indexallv1.ResourceTag{
-				Id:    t.TagID,
-				Name:  t.Name,
-				Color: nullStringToPointer(t.Color),
-			})
+		tagRows, err := s.q.GetResourceTags(ctx, resource.ID)
+		if err == nil {
+			for _, t := range tagRows {
+				tags = append(tags, &indexallv1.ResourceTag{
+					Id:    t.TagID,
+					Name:  t.Name,
+					Color: nullStringToPointer(t.Color),
+				})
+			}
 		}
 
-		items = append(items, &indexallv1.ResourceSearchResult{
-			Id:          r.ID,
-			Source:      r.Source,
-			Title:       r.Title,
-			Description: nullStringToPointer(r.Description),
-			Url:         nullStringToPointer(r.Url),
-			CreatedAt:   nullTimeToString(r.CreatedAt),
+		items[i] = &indexallv1.ResourceListItem{
+			Id:          resource.ID,
+			Source:      resource.Source,
+			Title:       resource.Title,
+			Description: nullStringToPointer(resource.Description),
+			Url:         nullStringToPointer(resource.Url),
+			Status:      indexallv1.ResourceStatus_RESOURCE_STATUS_ACTIVE,
+			CreatedAt:   nullTimeToString(resource.CreatedAt),
 			Tags:        tags,
-			MatchSource: indexallv1.MatchSource_MATCH_SOURCE_TITLE, // Always title for now
-		})
+		}
 	}
 
-	return connect.NewResponse(&indexallv1.SearchResourcesResponse{
+	return &indexallv1.ListResourcesResponse{
 		Items:    items,
-		Total:    int32(total),
-		Page:     int32(page),
-		PageSize: int32(pageSize),
-	}), nil
+		Total:    int32(count),
+		Page:     req.Page,
+		PageSize: req.PageSize,
+	}, nil
 }
 
-func (s *ResourceService) GetByUrl(ctx context.Context, req *connect.Request[indexallv1.GetByUrlRequest]) (*connect.Response[indexallv1.GetByUrlResponse], error) {
-	if req.Msg.Url == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("url is required"))
+func (s *ResourceService) Search(ctx context.Context, req *indexallv1.SearchResourcesRequest) (*indexallv1.SearchResourcesResponse, error) {
+	if req.Query == "" {
+		return nil, status.Error(codes.InvalidArgument, "query is required")
 	}
 
-	// Normalize URL
-	normalizedURL := normalizeURL(req.Msg.Url)
+	// TODO: Implement FTS5 search
+	// For now, use simple LIKE search
+	query := "%" + req.Query + "%"
 
-	resource, err := s.q.GetResourceByUrl(ctx, stringToNullString(normalizedURL))
+	resources, err := s.q.ListResources(ctx, gen.ListResourcesParams{
+		Status: sql.NullString{Valid: false},
+		Limit:  int64(req.PageSize),
+		Offset: int64((req.Page - 1) * req.PageSize),
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to search resources: %v", err)
+	}
+
+	_ = query // TODO: use query in search
+
+	items := make([]*indexallv1.ResourceSearchResult, len(resources))
+	for i, resource := range resources {
+		// Get tags
+		tags := make([]*indexallv1.ResourceTag, 0)
+		tagRows, err := s.q.GetResourceTags(ctx, resource.ID)
+		if err == nil {
+			for _, t := range tagRows {
+				tags = append(tags, &indexallv1.ResourceTag{
+					Id:    t.TagID,
+					Name:  t.Name,
+					Color: nullStringToPointer(t.Color),
+				})
+			}
+		}
+
+		items[i] = &indexallv1.ResourceSearchResult{
+			Id:          resource.ID,
+			Source:      resource.Source,
+			Title:       resource.Title,
+			Description: nullStringToPointer(resource.Description),
+			Url:         nullStringToPointer(resource.Url),
+			CreatedAt:   nullTimeToString(resource.CreatedAt),
+			Tags:        tags,
+			MatchSource: indexallv1.MatchSource_MATCH_SOURCE_UNSPECIFIED,
+		}
+	}
+
+	count, _ := s.q.CountResources(ctx, sql.NullString{Valid: false})
+
+	return &indexallv1.SearchResourcesResponse{
+		Items:    items,
+		Total:    int32(count),
+		Page:     req.Page,
+		PageSize: req.PageSize,
+	}, nil
+}
+
+func (s *ResourceService) GetByUrl(ctx context.Context, req *indexallv1.GetByUrlRequest) (*indexallv1.GetByUrlResponse, error) {
+	if req.Url == "" {
+		return nil, status.Error(codes.InvalidArgument, "url is required")
+	}
+
+	// Validate URL
+	if _, err := url.Parse(req.Url); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid url: %v", err)
+	}
+
+	resourceRow, err := s.q.GetResourceByUrl(ctx, sql.NullString{String: req.Url, Valid: true})
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return connect.NewResponse(&indexallv1.GetByUrlResponse{}), nil
+			return &indexallv1.GetByUrlResponse{}, nil
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, status.Errorf(codes.Internal, "failed to get resource: %v", err)
 	}
 
 	// Get tags
 	tags := make([]*indexallv1.ResourceTag, 0)
-	tagRows, err := s.q.GetResourceTags(ctx, resource.ID)
+	tagRows, err := s.q.GetResourceTags(ctx, resourceRow.ID)
 	if err == nil {
 		for _, t := range tagRows {
 			tags = append(tags, &indexallv1.ResourceTag{
@@ -412,82 +346,71 @@ func (s *ResourceService) GetByUrl(ctx context.Context, req *connect.Request[ind
 		}
 	}
 
-	return connect.NewResponse(&indexallv1.GetByUrlResponse{
+	return &indexallv1.GetByUrlResponse{
 		Resource: &indexallv1.GetByUrlResponse_Resource{
-			Id:    resource.ID,
-			Title: resource.Title,
-			Tags:  tags,
+			Id:   resourceRow.ID,
+			Title: resourceRow.Title,
+			Tags: tags,
 		},
-	}), nil
+	}, nil
 }
 
-func (s *ResourceService) AddTag(ctx context.Context, req *connect.Request[indexallv1.AddTagRequest]) (*connect.Response[indexallv1.AddTagResponse], error) {
-	if req.Msg.ResourceId == "" || req.Msg.TagId == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("resource id and tag id are required"))
+func (s *ResourceService) AddTag(ctx context.Context, req *indexallv1.AddTagRequest) (*indexallv1.AddTagResponse, error) {
+	if req.ResourceId == "" || req.TagId == "" {
+		return nil, status.Error(codes.InvalidArgument, "resource_id and tag_id are required")
+	}
+
+	// Verify resource exists
+	if _, err := s.q.GetResource(ctx, req.ResourceId); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, status.Error(codes.NotFound, "resource not found")
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get resource: %v", err)
+	}
+
+	// Verify tag exists
+	if _, err := s.q.GetTag(ctx, req.TagId); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, status.Error(codes.NotFound, "tag not found")
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get tag: %v", err)
 	}
 
 	err := s.q.AddTagToResource(ctx, gen.AddTagToResourceParams{
-		ResourceID: req.Msg.ResourceId,
-		TagID:      req.Msg.TagId,
+		ResourceID: req.ResourceId,
+		TagID:      req.TagId,
 	})
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to add tag: %w", err))
+		return nil, status.Errorf(codes.Internal, "failed to add tag: %v", err)
 	}
 
-	return connect.NewResponse(&indexallv1.AddTagResponse{
+	return &indexallv1.AddTagResponse{
 		Success: true,
-	}), nil
+	}, nil
 }
 
-func (s *ResourceService) RemoveTag(ctx context.Context, req *connect.Request[indexallv1.RemoveTagRequest]) (*connect.Response[indexallv1.RemoveTagResponse], error) {
-	if req.Msg.ResourceId == "" || req.Msg.TagId == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("resource id and tag id are required"))
+func (s *ResourceService) RemoveTag(ctx context.Context, req *indexallv1.RemoveTagRequest) (*indexallv1.RemoveTagResponse, error) {
+	if req.ResourceId == "" || req.TagId == "" {
+		return nil, status.Error(codes.InvalidArgument, "resource_id and tag_id are required")
+	}
+
+	// Verify resource exists
+	if _, err := s.q.GetResource(ctx, req.ResourceId); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, status.Error(codes.NotFound, "resource not found")
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get resource: %v", err)
 	}
 
 	err := s.q.RemoveTagFromResource(ctx, gen.RemoveTagFromResourceParams{
-		ResourceID: req.Msg.ResourceId,
-		TagID:      req.Msg.TagId,
+		ResourceID: req.ResourceId,
+		TagID:      req.TagId,
 	})
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to remove tag: %w", err))
+		return nil, status.Errorf(codes.Internal, "failed to remove tag: %v", err)
 	}
 
-	return connect.NewResponse(&indexallv1.RemoveTagResponse{
+	return &indexallv1.RemoveTagResponse{
 		Success: true,
-	}), nil
-}
-
-// Helper functions
-func statusToProto(status string) indexallv1.ResourceStatus {
-	switch status {
-	case "active":
-		return indexallv1.ResourceStatus_RESOURCE_STATUS_ACTIVE
-	case "stale":
-		return indexallv1.ResourceStatus_RESOURCE_STATUS_STALE
-	case "deleted":
-		return indexallv1.ResourceStatus_RESOURCE_STATUS_DELETED
-	default:
-		return indexallv1.ResourceStatus_RESOURCE_STATUS_UNSPECIFIED
-	}
-}
-
-func statusToString(status indexallv1.ResourceStatus) string {
-	switch status {
-	case indexallv1.ResourceStatus_RESOURCE_STATUS_ACTIVE:
-		return "active"
-	case indexallv1.ResourceStatus_RESOURCE_STATUS_STALE:
-		return "stale"
-	case indexallv1.ResourceStatus_RESOURCE_STATUS_DELETED:
-		return "deleted"
-	default:
-		return "active"
-	}
-}
-
-func normalizeURL(u string) string {
-	parsed, err := url.Parse(u)
-	if err != nil {
-		return u
-	}
-	return parsed.String()
+	}, nil
 }
