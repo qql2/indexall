@@ -24,3 +24,4 @@ plugins:
     out: ../../packages/web/src/gen
     opt:
       - target=ts
+      - import_extension=none

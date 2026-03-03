@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CreateTagRequestSchema, CreateTagResponseSchema, UpdateTagRequestSchema, UpdateTagResponseSchema, DeleteTagRequestSchema, DeleteTagResponseSchema, ListTagsRequestSchema, ListTagsResponseSchema, GetTreeRequestSchema, GetTreeResponseSchema, SearchTagsRequestSchema, SearchTagsResponseSchema, AddAliasRequestSchema, AddAliasResponseSchema, RemoveAliasRequestSchema, RemoveAliasResponseSchema, AddParentRequestSchema, AddParentResponseSchema, RemoveParentRequestSchema, RemoveParentResponseSchema } from "./tag_pb.js";
+import { AddAliasRequestSchema, AddAliasResponseSchema, AddParentRequestSchema, AddParentResponseSchema, CreateTagRequestSchema, CreateTagResponseSchema, DeleteTagRequestSchema, DeleteTagResponseSchema, GetTreeRequestSchema, GetTreeResponseSchema, ListTagsRequestSchema, ListTagsResponseSchema, RemoveAliasRequestSchema, RemoveAliasResponseSchema, RemoveParentRequestSchema, RemoveParentResponseSchema, SearchTagsRequestSchema, SearchTagsResponseSchema, UpdateTagRequestSchema, UpdateTagResponseSchema } from "./tag_pb.js";
 import { MethodKind } from "./codegenv2-shim.js";
 
 /**

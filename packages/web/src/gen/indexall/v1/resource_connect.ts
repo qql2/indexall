@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CreateResourceRequestSchema, CreateResourceResponseSchema, UpdateResourceRequestSchema, UpdateResourceResponseSchema, DeleteResourceRequestSchema, DeleteResourceResponseSchema, GetResourceRequestSchema, GetResourceResponseSchema, ListResourcesRequestSchema, ListResourcesResponseSchema, SearchResourcesRequestSchema, SearchResourcesResponseSchema, GetByUrlRequestSchema, GetByUrlResponseSchema, AddTagRequestSchema, AddTagResponseSchema, RemoveTagRequestSchema, RemoveTagResponseSchema } from "./resource_pb.js";
+import { AddTagRequestSchema, AddTagResponseSchema, CreateResourceRequestSchema, CreateResourceResponseSchema, DeleteResourceRequestSchema, DeleteResourceResponseSchema, GetByUrlRequestSchema, GetByUrlResponseSchema, GetResourceRequestSchema, GetResourceResponseSchema, ListResourcesRequestSchema, ListResourcesResponseSchema, RemoveTagRequestSchema, RemoveTagResponseSchema, SearchResourcesRequestSchema, SearchResourcesResponseSchema, UpdateResourceRequestSchema, UpdateResourceResponseSchema } from "./resource_pb.js";
 import { MethodKind } from "./codegenv2-shim.js";
 
 /**
