@@ -1,0 +1,21 @@
+version: v1
+
+plugins:
+  # Go protobuf message code generation
+  - name: go
+    out: internal/gen/pb
+    opt:
+      - paths=source_relative
+
+  # Go gRPC interface code generation
+  - name: go-grpc
+    out: internal/gen/pb
+    opt:
+      - paths=source_relative
+
+  # gRPC-Gateway HTTP code generation for reverse proxy
+  - name: grpc-gateway
+    out: internal/gen/pb
+    opt:
+      - paths=source_relative
+      - generate_unbound_methods=true
