@@ -1,0 +1,59 @@
+# Go build
+/bin/
+*.exe
+*.exe~
+*.dll
+*.dylib
+*.test
+*.out
+
+# Go dependencies
+vendor/
+go.work
+
+# Go cache
+.go/
+
+# Compiled Object files
+*.o
+*.a
+*.so
+
+# OS files
+Thumbs.db
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/
+
+# Project specific
+*.cert
+*.key
+*.log
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
+# IDE & Editor
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.[oas]
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Development
+air
+air.toml
+.air.toml

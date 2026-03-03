@@ -1,0 +1,14 @@
+server:
+  http:
+    network: tcp
+    addr: :8080
+    timeout: 10s
+  grpc:
+    network: tcp
+    addr: :9000
+    timeout: 10s
+
+data:
+  database:
+    driver: sqlite3
+    source: indexall.db
