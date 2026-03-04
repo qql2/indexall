@@ -1,0 +1,3 @@
+-- Migration for tags support and optional FTS5
+-- This migration is minimal since FTS5 may not be available in all SQLite builds
+-- Service layer handles LIKE fallback when FTS5 is unavailable

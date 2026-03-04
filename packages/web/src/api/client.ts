@@ -116,17 +116,23 @@ export interface GetTreeResponse {
 
 export interface SearchTagsRequest {
   query: string;
+  tag_scope?: "DIRECT" | "WITH_ANCESTORS" | "WITH_DESCENDANTS";
+  limit?: number;
+  offset?: number;
 }
 
 export interface TagSearchResult {
   id: string;
   name: string;
   color?: string;
-  matched_alias?: string;
+  description?: string;
+  aliases: string[];
+  resource_count: number;
 }
 
 export interface SearchTagsResponse {
   results: TagSearchResult[];
+  total: number;
 }
 
 export interface AddAliasRequest {
@@ -183,6 +189,13 @@ export const tagApi = {
 // ============================================================================
 // Resource API
 // ============================================================================
+
+export interface TagInfo {
+  id: string;
+  name: string;
+  description?: string;
+  aliases: string[];
+}
 
 export enum ResourceStatus {
   UNSPECIFIED = 0,
@@ -273,6 +286,32 @@ export interface SearchResourcesRequest {
   page_size?: number;
 }
 
+export interface TagQuery {
+  tag_id: string;
+  tag_scope?: "DIRECT" | "WITH_ANCESTORS" | "WITH_DESCENDANTS";
+}
+
+export interface KeywordQuery {
+  keyword: string;
+  field_scope?: "ALL" | "TITLE" | "DESCRIPTION";
+  tag_scope?: "DIRECT" | "WITH_ANCESTORS" | "WITH_DESCENDANTS";
+}
+
+export interface ResourceQueryRequest {
+  tag_query?: TagQuery;
+  keyword_query?: KeywordQuery;
+  page?: number;
+  page_size?: number;
+  sort_by?: string;
+}
+
+export interface ResourceQueryResponse {
+  items: ResourceSearchResult[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 export enum MatchSource {
   UNSPECIFIED = 0,
   TITLE = 1,
@@ -288,7 +327,8 @@ export interface ResourceSearchResult {
   description?: string;
   url?: string;
   created_at: string;
-  tags: ResourceTag[];
+  updated_at: string;
+  tags: TagInfo[];
   match_source: number;
 }
 
@@ -355,16 +395,12 @@ export const resourceApi = {
     );
   },
 
-  search: (req: SearchResourcesRequest) => {
-    const params = new URLSearchParams();
-    params.append("query", req.query);
-    params.append("page", (req.page || 1).toString());
-    params.append("page_size", (req.page_size || 10).toString());
-    return makeRequest<SearchResourcesResponse>(
-      "GET",
-      `/resources/search?${params.toString()}`,
-    );
-  },
+  query: (req: ResourceQueryRequest) =>
+    makeRequest<ResourceQueryResponse>("POST", "/resources/query", {
+      ...req,
+      page: req.page || 1,
+      page_size: req.page_size || 20,
+    }),
 
   getByUrl: (url: string) =>
     makeRequest<GetByUrlResponse>(

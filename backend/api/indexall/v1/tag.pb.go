@@ -22,6 +22,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type SearchTagsRequest_TagScope int32
+
+const (
+	SearchTagsRequest_DIRECT           SearchTagsRequest_TagScope = 0
+	SearchTagsRequest_WITH_ANCESTORS   SearchTagsRequest_TagScope = 1
+	SearchTagsRequest_WITH_DESCENDANTS SearchTagsRequest_TagScope = 2
+)
+
+// Enum value maps for SearchTagsRequest_TagScope.
+var (
+	SearchTagsRequest_TagScope_name = map[int32]string{
+		0: "DIRECT",
+		1: "WITH_ANCESTORS",
+		2: "WITH_DESCENDANTS",
+	}
+	SearchTagsRequest_TagScope_value = map[string]int32{
+		"DIRECT":           0,
+		"WITH_ANCESTORS":   1,
+		"WITH_DESCENDANTS": 2,
+	}
+)
+
+func (x SearchTagsRequest_TagScope) Enum() *SearchTagsRequest_TagScope {
+	p := new(SearchTagsRequest_TagScope)
+	*p = x
+	return p
+}
+
+func (x SearchTagsRequest_TagScope) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SearchTagsRequest_TagScope) Descriptor() protoreflect.EnumDescriptor {
+	return file_indexall_v1_tag_proto_enumTypes[0].Descriptor()
+}
+
+func (SearchTagsRequest_TagScope) Type() protoreflect.EnumType {
+	return &file_indexall_v1_tag_proto_enumTypes[0]
+}
+
+func (x SearchTagsRequest_TagScope) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SearchTagsRequest_TagScope.Descriptor instead.
+func (SearchTagsRequest_TagScope) EnumDescriptor() ([]byte, []int) {
+	return file_indexall_v1_tag_proto_rawDescGZIP(), []int{13, 0}
+}
+
 // Tag represents a label/classification for resources
 type Tag struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -788,8 +837,11 @@ func (x *GetTreeResponse) GetRoots() []*TagTreeNode {
 }
 
 type SearchTagsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Query         string                 `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
+	state         protoimpl.MessageState     `protogen:"open.v1"`
+	Query         string                     `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
+	TagScope      SearchTagsRequest_TagScope `protobuf:"varint,2,opt,name=tag_scope,json=tagScope,proto3,enum=indexall.v1.SearchTagsRequest_TagScope" json:"tag_scope,omitempty"`
+	Limit         int32                      `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
+	Offset        int32                      `protobuf:"varint,4,opt,name=offset,proto3" json:"offset,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -831,9 +883,31 @@ func (x *SearchTagsRequest) GetQuery() string {
 	return ""
 }
 
+func (x *SearchTagsRequest) GetTagScope() SearchTagsRequest_TagScope {
+	if x != nil {
+		return x.TagScope
+	}
+	return SearchTagsRequest_DIRECT
+}
+
+func (x *SearchTagsRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *SearchTagsRequest) GetOffset() int32 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
 type SearchTagsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Results       []*TagSearchResult     `protobuf:"bytes,1,rep,name=results,proto3" json:"results,omitempty"`
+	Total         int32                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -875,12 +949,21 @@ func (x *SearchTagsResponse) GetResults() []*TagSearchResult {
 	return nil
 }
 
+func (x *SearchTagsResponse) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
 type TagSearchResult struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Color         *string                `protobuf:"bytes,3,opt,name=color,proto3,oneof" json:"color,omitempty"`
-	MatchedAlias  *string                `protobuf:"bytes,4,opt,name=matched_alias,json=matchedAlias,proto3,oneof" json:"matched_alias,omitempty"`
+	Description   *string                `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	Aliases       []string               `protobuf:"bytes,5,rep,name=aliases,proto3" json:"aliases,omitempty"`
+	ResourceCount int32                  `protobuf:"varint,6,opt,name=resource_count,json=resourceCount,proto3" json:"resource_count,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -936,11 +1019,25 @@ func (x *TagSearchResult) GetColor() string {
 	return ""
 }
 
-func (x *TagSearchResult) GetMatchedAlias() string {
-	if x != nil && x.MatchedAlias != nil {
-		return *x.MatchedAlias
+func (x *TagSearchResult) GetDescription() string {
+	if x != nil && x.Description != nil {
+		return *x.Description
 	}
 	return ""
+}
+
+func (x *TagSearchResult) GetAliases() []string {
+	if x != nil {
+		return x.Aliases
+	}
+	return nil
+}
+
+func (x *TagSearchResult) GetResourceCount() int32 {
+	if x != nil {
+		return x.ResourceCount
+	}
+	return 0
 }
 
 type AddAliasRequest struct {
@@ -1395,18 +1492,29 @@ const file_indexall_v1_tag_proto_rawDesc = "" +
 	"\x06_color\"\x10\n" +
 	"\x0eGetTreeRequest\"A\n" +
 	"\x0fGetTreeResponse\x12.\n" +
-	"\x05roots\x18\x01 \x03(\v2\x18.indexall.v1.TagTreeNodeR\x05roots\")\n" +
+	"\x05roots\x18\x01 \x03(\v2\x18.indexall.v1.TagTreeNodeR\x05roots\"\xdf\x01\n" +
 	"\x11SearchTagsRequest\x12\x14\n" +
-	"\x05query\x18\x01 \x01(\tR\x05query\"L\n" +
+	"\x05query\x18\x01 \x01(\tR\x05query\x12D\n" +
+	"\ttag_scope\x18\x02 \x01(\x0e2'.indexall.v1.SearchTagsRequest.TagScopeR\btagScope\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x16\n" +
+	"\x06offset\x18\x04 \x01(\x05R\x06offset\"@\n" +
+	"\bTagScope\x12\n" +
+	"\n" +
+	"\x06DIRECT\x10\x00\x12\x12\n" +
+	"\x0eWITH_ANCESTORS\x10\x01\x12\x14\n" +
+	"\x10WITH_DESCENDANTS\x10\x02\"b\n" +
 	"\x12SearchTagsResponse\x126\n" +
-	"\aresults\x18\x01 \x03(\v2\x1c.indexall.v1.TagSearchResultR\aresults\"\x96\x01\n" +
+	"\aresults\x18\x01 \x03(\v2\x1c.indexall.v1.TagSearchResultR\aresults\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\"\xd2\x01\n" +
 	"\x0fTagSearchResult\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x19\n" +
-	"\x05color\x18\x03 \x01(\tH\x00R\x05color\x88\x01\x01\x12(\n" +
-	"\rmatched_alias\x18\x04 \x01(\tH\x01R\fmatchedAlias\x88\x01\x01B\b\n" +
-	"\x06_colorB\x10\n" +
-	"\x0e_matched_alias\">\n" +
+	"\x05color\x18\x03 \x01(\tH\x00R\x05color\x88\x01\x01\x12%\n" +
+	"\vdescription\x18\x04 \x01(\tH\x01R\vdescription\x88\x01\x01\x12\x18\n" +
+	"\aaliases\x18\x05 \x03(\tR\aaliases\x12%\n" +
+	"\x0eresource_count\x18\x06 \x01(\x05R\rresourceCountB\b\n" +
+	"\x06_colorB\x0e\n" +
+	"\f_description\">\n" +
 	"\x0fAddAliasRequest\x12\x15\n" +
 	"\x06tag_id\x18\x01 \x01(\tR\x05tagId\x12\x14\n" +
 	"\x05alias\x18\x02 \x01(\tR\x05alias\"8\n" +
@@ -1453,63 +1561,66 @@ func file_indexall_v1_tag_proto_rawDescGZIP() []byte {
 	return file_indexall_v1_tag_proto_rawDescData
 }
 
+var file_indexall_v1_tag_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_indexall_v1_tag_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_indexall_v1_tag_proto_goTypes = []any{
-	(*Tag)(nil),                  // 0: indexall.v1.Tag
-	(*CreateTagRequest)(nil),     // 1: indexall.v1.CreateTagRequest
-	(*CreateTagResponse)(nil),    // 2: indexall.v1.CreateTagResponse
-	(*UpdateTagRequest)(nil),     // 3: indexall.v1.UpdateTagRequest
-	(*UpdateTagResponse)(nil),    // 4: indexall.v1.UpdateTagResponse
-	(*DeleteTagRequest)(nil),     // 5: indexall.v1.DeleteTagRequest
-	(*DeleteTagResponse)(nil),    // 6: indexall.v1.DeleteTagResponse
-	(*ListTagsRequest)(nil),      // 7: indexall.v1.ListTagsRequest
-	(*ListTagsResponse)(nil),     // 8: indexall.v1.ListTagsResponse
-	(*TagListItem)(nil),          // 9: indexall.v1.TagListItem
-	(*TagTreeNode)(nil),          // 10: indexall.v1.TagTreeNode
-	(*GetTreeRequest)(nil),       // 11: indexall.v1.GetTreeRequest
-	(*GetTreeResponse)(nil),      // 12: indexall.v1.GetTreeResponse
-	(*SearchTagsRequest)(nil),    // 13: indexall.v1.SearchTagsRequest
-	(*SearchTagsResponse)(nil),   // 14: indexall.v1.SearchTagsResponse
-	(*TagSearchResult)(nil),      // 15: indexall.v1.TagSearchResult
-	(*AddAliasRequest)(nil),      // 16: indexall.v1.AddAliasRequest
-	(*AddAliasResponse)(nil),     // 17: indexall.v1.AddAliasResponse
-	(*RemoveAliasRequest)(nil),   // 18: indexall.v1.RemoveAliasRequest
-	(*RemoveAliasResponse)(nil),  // 19: indexall.v1.RemoveAliasResponse
-	(*AddParentRequest)(nil),     // 20: indexall.v1.AddParentRequest
-	(*AddParentResponse)(nil),    // 21: indexall.v1.AddParentResponse
-	(*RemoveParentRequest)(nil),  // 22: indexall.v1.RemoveParentRequest
-	(*RemoveParentResponse)(nil), // 23: indexall.v1.RemoveParentResponse
+	(SearchTagsRequest_TagScope)(0), // 0: indexall.v1.SearchTagsRequest.TagScope
+	(*Tag)(nil),                     // 1: indexall.v1.Tag
+	(*CreateTagRequest)(nil),        // 2: indexall.v1.CreateTagRequest
+	(*CreateTagResponse)(nil),       // 3: indexall.v1.CreateTagResponse
+	(*UpdateTagRequest)(nil),        // 4: indexall.v1.UpdateTagRequest
+	(*UpdateTagResponse)(nil),       // 5: indexall.v1.UpdateTagResponse
+	(*DeleteTagRequest)(nil),        // 6: indexall.v1.DeleteTagRequest
+	(*DeleteTagResponse)(nil),       // 7: indexall.v1.DeleteTagResponse
+	(*ListTagsRequest)(nil),         // 8: indexall.v1.ListTagsRequest
+	(*ListTagsResponse)(nil),        // 9: indexall.v1.ListTagsResponse
+	(*TagListItem)(nil),             // 10: indexall.v1.TagListItem
+	(*TagTreeNode)(nil),             // 11: indexall.v1.TagTreeNode
+	(*GetTreeRequest)(nil),          // 12: indexall.v1.GetTreeRequest
+	(*GetTreeResponse)(nil),         // 13: indexall.v1.GetTreeResponse
+	(*SearchTagsRequest)(nil),       // 14: indexall.v1.SearchTagsRequest
+	(*SearchTagsResponse)(nil),      // 15: indexall.v1.SearchTagsResponse
+	(*TagSearchResult)(nil),         // 16: indexall.v1.TagSearchResult
+	(*AddAliasRequest)(nil),         // 17: indexall.v1.AddAliasRequest
+	(*AddAliasResponse)(nil),        // 18: indexall.v1.AddAliasResponse
+	(*RemoveAliasRequest)(nil),      // 19: indexall.v1.RemoveAliasRequest
+	(*RemoveAliasResponse)(nil),     // 20: indexall.v1.RemoveAliasResponse
+	(*AddParentRequest)(nil),        // 21: indexall.v1.AddParentRequest
+	(*AddParentResponse)(nil),       // 22: indexall.v1.AddParentResponse
+	(*RemoveParentRequest)(nil),     // 23: indexall.v1.RemoveParentRequest
+	(*RemoveParentResponse)(nil),    // 24: indexall.v1.RemoveParentResponse
 }
 var file_indexall_v1_tag_proto_depIdxs = []int32{
-	9,  // 0: indexall.v1.ListTagsResponse.tags:type_name -> indexall.v1.TagListItem
-	10, // 1: indexall.v1.TagTreeNode.children:type_name -> indexall.v1.TagTreeNode
-	10, // 2: indexall.v1.GetTreeResponse.roots:type_name -> indexall.v1.TagTreeNode
-	15, // 3: indexall.v1.SearchTagsResponse.results:type_name -> indexall.v1.TagSearchResult
-	1,  // 4: indexall.v1.TagService.Create:input_type -> indexall.v1.CreateTagRequest
-	3,  // 5: indexall.v1.TagService.Update:input_type -> indexall.v1.UpdateTagRequest
-	5,  // 6: indexall.v1.TagService.Delete:input_type -> indexall.v1.DeleteTagRequest
-	7,  // 7: indexall.v1.TagService.List:input_type -> indexall.v1.ListTagsRequest
-	11, // 8: indexall.v1.TagService.GetTree:input_type -> indexall.v1.GetTreeRequest
-	13, // 9: indexall.v1.TagService.Search:input_type -> indexall.v1.SearchTagsRequest
-	16, // 10: indexall.v1.TagService.AddAlias:input_type -> indexall.v1.AddAliasRequest
-	18, // 11: indexall.v1.TagService.RemoveAlias:input_type -> indexall.v1.RemoveAliasRequest
-	20, // 12: indexall.v1.TagService.AddParent:input_type -> indexall.v1.AddParentRequest
-	22, // 13: indexall.v1.TagService.RemoveParent:input_type -> indexall.v1.RemoveParentRequest
-	2,  // 14: indexall.v1.TagService.Create:output_type -> indexall.v1.CreateTagResponse
-	4,  // 15: indexall.v1.TagService.Update:output_type -> indexall.v1.UpdateTagResponse
-	6,  // 16: indexall.v1.TagService.Delete:output_type -> indexall.v1.DeleteTagResponse
-	8,  // 17: indexall.v1.TagService.List:output_type -> indexall.v1.ListTagsResponse
-	12, // 18: indexall.v1.TagService.GetTree:output_type -> indexall.v1.GetTreeResponse
-	14, // 19: indexall.v1.TagService.Search:output_type -> indexall.v1.SearchTagsResponse
-	17, // 20: indexall.v1.TagService.AddAlias:output_type -> indexall.v1.AddAliasResponse
-	19, // 21: indexall.v1.TagService.RemoveAlias:output_type -> indexall.v1.RemoveAliasResponse
-	21, // 22: indexall.v1.TagService.AddParent:output_type -> indexall.v1.AddParentResponse
-	23, // 23: indexall.v1.TagService.RemoveParent:output_type -> indexall.v1.RemoveParentResponse
-	14, // [14:24] is the sub-list for method output_type
-	4,  // [4:14] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	10, // 0: indexall.v1.ListTagsResponse.tags:type_name -> indexall.v1.TagListItem
+	11, // 1: indexall.v1.TagTreeNode.children:type_name -> indexall.v1.TagTreeNode
+	11, // 2: indexall.v1.GetTreeResponse.roots:type_name -> indexall.v1.TagTreeNode
+	0,  // 3: indexall.v1.SearchTagsRequest.tag_scope:type_name -> indexall.v1.SearchTagsRequest.TagScope
+	16, // 4: indexall.v1.SearchTagsResponse.results:type_name -> indexall.v1.TagSearchResult
+	2,  // 5: indexall.v1.TagService.Create:input_type -> indexall.v1.CreateTagRequest
+	4,  // 6: indexall.v1.TagService.Update:input_type -> indexall.v1.UpdateTagRequest
+	6,  // 7: indexall.v1.TagService.Delete:input_type -> indexall.v1.DeleteTagRequest
+	8,  // 8: indexall.v1.TagService.List:input_type -> indexall.v1.ListTagsRequest
+	12, // 9: indexall.v1.TagService.GetTree:input_type -> indexall.v1.GetTreeRequest
+	14, // 10: indexall.v1.TagService.Search:input_type -> indexall.v1.SearchTagsRequest
+	17, // 11: indexall.v1.TagService.AddAlias:input_type -> indexall.v1.AddAliasRequest
+	19, // 12: indexall.v1.TagService.RemoveAlias:input_type -> indexall.v1.RemoveAliasRequest
+	21, // 13: indexall.v1.TagService.AddParent:input_type -> indexall.v1.AddParentRequest
+	23, // 14: indexall.v1.TagService.RemoveParent:input_type -> indexall.v1.RemoveParentRequest
+	3,  // 15: indexall.v1.TagService.Create:output_type -> indexall.v1.CreateTagResponse
+	5,  // 16: indexall.v1.TagService.Update:output_type -> indexall.v1.UpdateTagResponse
+	7,  // 17: indexall.v1.TagService.Delete:output_type -> indexall.v1.DeleteTagResponse
+	9,  // 18: indexall.v1.TagService.List:output_type -> indexall.v1.ListTagsResponse
+	13, // 19: indexall.v1.TagService.GetTree:output_type -> indexall.v1.GetTreeResponse
+	15, // 20: indexall.v1.TagService.Search:output_type -> indexall.v1.SearchTagsResponse
+	18, // 21: indexall.v1.TagService.AddAlias:output_type -> indexall.v1.AddAliasResponse
+	20, // 22: indexall.v1.TagService.RemoveAlias:output_type -> indexall.v1.RemoveAliasResponse
+	22, // 23: indexall.v1.TagService.AddParent:output_type -> indexall.v1.AddParentResponse
+	24, // 24: indexall.v1.TagService.RemoveParent:output_type -> indexall.v1.RemoveParentResponse
+	15, // [15:25] is the sub-list for method output_type
+	5,  // [5:15] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_indexall_v1_tag_proto_init() }
@@ -1529,13 +1640,14 @@ func file_indexall_v1_tag_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_indexall_v1_tag_proto_rawDesc), len(file_indexall_v1_tag_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_indexall_v1_tag_proto_goTypes,
 		DependencyIndexes: file_indexall_v1_tag_proto_depIdxs,
+		EnumInfos:         file_indexall_v1_tag_proto_enumTypes,
 		MessageInfos:      file_indexall_v1_tag_proto_msgTypes,
 	}.Build()
 	File_indexall_v1_tag_proto = out.File

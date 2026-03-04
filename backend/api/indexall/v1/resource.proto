@@ -148,8 +148,9 @@ message ResourceSearchResult {
   optional string description = 4;
   optional string url = 5;
   string created_at = 6;
-  repeated ResourceTag tags = 7;
-  MatchSource match_source = 8;
+  string updated_at = 7;
+  repeated TagInfo tags = 8;
+  MatchSource match_source = 9;
 }
 
 message GetByUrlRequest {
@@ -163,6 +164,60 @@ message GetByUrlResponse {
     repeated ResourceTag tags = 3;
   }
   optional Resource resource = 1;
+}
+
+message TagInfo {
+  string id = 1;
+  string name = 2;
+  optional string description = 3;
+  repeated string aliases = 4;
+}
+
+message TagQuery {
+  string tag_id = 1;
+
+  enum TagScope {
+    DIRECT = 0;
+    WITH_ANCESTORS = 1;
+    WITH_DESCENDANTS = 2;
+  }
+  TagScope tag_scope = 2;
+}
+
+message KeywordQuery {
+  string keyword = 1;
+
+  enum FieldScope {
+    ALL = 0;
+    TITLE = 1;
+    DESCRIPTION = 2;
+  }
+  FieldScope field_scope = 2;
+
+  enum TagScope {
+    DIRECT = 0;
+    WITH_ANCESTORS = 1;
+    WITH_DESCENDANTS = 2;
+  }
+  TagScope tag_scope = 3;
+}
+
+message ResourceQueryRequest {
+  oneof query {
+    TagQuery tag_query = 1;
+    KeywordQuery keyword_query = 2;
+  }
+
+  int32 page = 3;
+  int32 page_size = 4;
+  string sort_by = 5;
+}
+
+message ResourceQueryResponse {
+  repeated ResourceSearchResult items = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
 }
 
 message AddTagRequest {
@@ -206,14 +261,10 @@ service ResourceService {
       get: "/v1/resources/{id}"
     };
   };
-  rpc List(ListResourcesRequest) returns (ListResourcesResponse) {
+  rpc Query(ResourceQueryRequest) returns (ResourceQueryResponse) {
     option (google.api.http) = {
-      get: "/v1/resources"
-    };
-  };
-  rpc Search(SearchResourcesRequest) returns (SearchResourcesResponse) {
-    option (google.api.http) = {
-      get: "/v1/resources/search"
+      post: "/v1/resources/query"
+      body: "*"
     };
   };
   rpc GetByUrl(GetByUrlRequest) returns (GetByUrlResponse) {
