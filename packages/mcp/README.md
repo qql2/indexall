@@ -175,6 +175,36 @@ See `API_DESIGN.md` in the root for API specification.
 - Verify API endpoint exists: `curl http://localhost:8080/v1/resources`
 - Check API response format matches expectations
 
+## Built-in Skill: IndexAll Assistant
+
+A ready-to-use Claude Skill is included in `skills/indexall-assistant/` that provides structured workflows for managing your resource collection.
+
+### Installing the IndexAll Assistant Skill
+
+1. Build and configure the MCP server (steps 1-3 above)
+2. The `indexall-assistant` skill is ready to use immediately—no additional configuration needed
+
+### What the Skill Provides
+
+**Typical workflows:**
+- Index new resources (add, categorize, tag)
+- Organize and refactor your tag taxonomy
+- Search and discover resources by tag or keyword
+- Audit and clean up stale resources
+- Plan resource collection strategy
+
+The skill guides you through these workflows using the underlying MCP tools, handling the sequencing and providing context-aware guidance.
+
+### Customizing the Skill
+
+To customize the skill for your specific taxonomy or workflow:
+
+1. Edit `skills/indexall-assistant/references/taxonomy.md` to document your tag hierarchy
+2. Update workflow examples in `SKILL.md` to match your patterns
+3. Reload Claude Desktop to apply changes
+
+See the skill's `SKILL.md` for complete documentation.
+
 ## Future Enhancements
 
 - [ ] Authentication/authorization
