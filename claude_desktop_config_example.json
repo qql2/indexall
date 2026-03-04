@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "indexall": {
+      "command": "node",
+      "args": ["/path/to/indexall/packages/mcp/dist/index.js"],
+      "env": {
+        "INDEXALL_API_URL": "http://localhost:8080"
+      }
+    }
+  }
+}
