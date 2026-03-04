@@ -23,8 +23,7 @@ const (
 	ResourceService_Update_FullMethodName    = "/indexall.v1.ResourceService/Update"
 	ResourceService_Delete_FullMethodName    = "/indexall.v1.ResourceService/Delete"
 	ResourceService_Get_FullMethodName       = "/indexall.v1.ResourceService/Get"
-	ResourceService_List_FullMethodName      = "/indexall.v1.ResourceService/List"
-	ResourceService_Search_FullMethodName    = "/indexall.v1.ResourceService/Search"
+	ResourceService_Query_FullMethodName     = "/indexall.v1.ResourceService/Query"
 	ResourceService_GetByUrl_FullMethodName  = "/indexall.v1.ResourceService/GetByUrl"
 	ResourceService_AddTag_FullMethodName    = "/indexall.v1.ResourceService/AddTag"
 	ResourceService_RemoveTag_FullMethodName = "/indexall.v1.ResourceService/RemoveTag"
@@ -38,8 +37,7 @@ type ResourceServiceClient interface {
 	Update(ctx context.Context, in *UpdateResourceRequest, opts ...grpc.CallOption) (*UpdateResourceResponse, error)
 	Delete(ctx context.Context, in *DeleteResourceRequest, opts ...grpc.CallOption) (*DeleteResourceResponse, error)
 	Get(ctx context.Context, in *GetResourceRequest, opts ...grpc.CallOption) (*GetResourceResponse, error)
-	List(ctx context.Context, in *ListResourcesRequest, opts ...grpc.CallOption) (*ListResourcesResponse, error)
-	Search(ctx context.Context, in *SearchResourcesRequest, opts ...grpc.CallOption) (*SearchResourcesResponse, error)
+	Query(ctx context.Context, in *ResourceQueryRequest, opts ...grpc.CallOption) (*ResourceQueryResponse, error)
 	GetByUrl(ctx context.Context, in *GetByUrlRequest, opts ...grpc.CallOption) (*GetByUrlResponse, error)
 	AddTag(ctx context.Context, in *AddTagRequest, opts ...grpc.CallOption) (*AddTagResponse, error)
 	RemoveTag(ctx context.Context, in *RemoveTagRequest, opts ...grpc.CallOption) (*RemoveTagResponse, error)
@@ -93,20 +91,10 @@ func (c *resourceServiceClient) Get(ctx context.Context, in *GetResourceRequest,
 	return out, nil
 }
 
-func (c *resourceServiceClient) List(ctx context.Context, in *ListResourcesRequest, opts ...grpc.CallOption) (*ListResourcesResponse, error) {
+func (c *resourceServiceClient) Query(ctx context.Context, in *ResourceQueryRequest, opts ...grpc.CallOption) (*ResourceQueryResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListResourcesResponse)
-	err := c.cc.Invoke(ctx, ResourceService_List_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *resourceServiceClient) Search(ctx context.Context, in *SearchResourcesRequest, opts ...grpc.CallOption) (*SearchResourcesResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SearchResourcesResponse)
-	err := c.cc.Invoke(ctx, ResourceService_Search_FullMethodName, in, out, cOpts...)
+	out := new(ResourceQueryResponse)
+	err := c.cc.Invoke(ctx, ResourceService_Query_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -151,8 +139,7 @@ type ResourceServiceServer interface {
 	Update(context.Context, *UpdateResourceRequest) (*UpdateResourceResponse, error)
 	Delete(context.Context, *DeleteResourceRequest) (*DeleteResourceResponse, error)
 	Get(context.Context, *GetResourceRequest) (*GetResourceResponse, error)
-	List(context.Context, *ListResourcesRequest) (*ListResourcesResponse, error)
-	Search(context.Context, *SearchResourcesRequest) (*SearchResourcesResponse, error)
+	Query(context.Context, *ResourceQueryRequest) (*ResourceQueryResponse, error)
 	GetByUrl(context.Context, *GetByUrlRequest) (*GetByUrlResponse, error)
 	AddTag(context.Context, *AddTagRequest) (*AddTagResponse, error)
 	RemoveTag(context.Context, *RemoveTagRequest) (*RemoveTagResponse, error)
@@ -178,11 +165,8 @@ func (UnimplementedResourceServiceServer) Delete(context.Context, *DeleteResourc
 func (UnimplementedResourceServiceServer) Get(context.Context, *GetResourceRequest) (*GetResourceResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Get not implemented")
 }
-func (UnimplementedResourceServiceServer) List(context.Context, *ListResourcesRequest) (*ListResourcesResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method List not implemented")
-}
-func (UnimplementedResourceServiceServer) Search(context.Context, *SearchResourcesRequest) (*SearchResourcesResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Search not implemented")
+func (UnimplementedResourceServiceServer) Query(context.Context, *ResourceQueryRequest) (*ResourceQueryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Query not implemented")
 }
 func (UnimplementedResourceServiceServer) GetByUrl(context.Context, *GetByUrlRequest) (*GetByUrlResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetByUrl not implemented")
@@ -286,38 +270,20 @@ func _ResourceService_Get_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ResourceService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListResourcesRequest)
+func _ResourceService_Query_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResourceQueryRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ResourceServiceServer).List(ctx, in)
+		return srv.(ResourceServiceServer).Query(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ResourceService_List_FullMethodName,
+		FullMethod: ResourceService_Query_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ResourceServiceServer).List(ctx, req.(*ListResourcesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ResourceService_Search_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SearchResourcesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ResourceServiceServer).Search(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ResourceService_Search_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ResourceServiceServer).Search(ctx, req.(*SearchResourcesRequest))
+		return srv.(ResourceServiceServer).Query(ctx, req.(*ResourceQueryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -400,12 +366,8 @@ var ResourceService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ResourceService_Get_Handler,
 		},
 		{
-			MethodName: "List",
-			Handler:    _ResourceService_List_Handler,
-		},
-		{
-			MethodName: "Search",
-			Handler:    _ResourceService_Search_Handler,
+			MethodName: "Query",
+			Handler:    _ResourceService_Query_Handler,
 		},
 		{
 			MethodName: "GetByUrl",
