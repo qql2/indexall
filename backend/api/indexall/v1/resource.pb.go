@@ -130,6 +130,153 @@ func (MatchSource) EnumDescriptor() ([]byte, []int) {
 	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{1}
 }
 
+type TagQuery_TagScope int32
+
+const (
+	TagQuery_DIRECT           TagQuery_TagScope = 0
+	TagQuery_WITH_ANCESTORS   TagQuery_TagScope = 1
+	TagQuery_WITH_DESCENDANTS TagQuery_TagScope = 2
+)
+
+// Enum value maps for TagQuery_TagScope.
+var (
+	TagQuery_TagScope_name = map[int32]string{
+		0: "DIRECT",
+		1: "WITH_ANCESTORS",
+		2: "WITH_DESCENDANTS",
+	}
+	TagQuery_TagScope_value = map[string]int32{
+		"DIRECT":           0,
+		"WITH_ANCESTORS":   1,
+		"WITH_DESCENDANTS": 2,
+	}
+)
+
+func (x TagQuery_TagScope) Enum() *TagQuery_TagScope {
+	p := new(TagQuery_TagScope)
+	*p = x
+	return p
+}
+
+func (x TagQuery_TagScope) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TagQuery_TagScope) Descriptor() protoreflect.EnumDescriptor {
+	return file_indexall_v1_resource_proto_enumTypes[2].Descriptor()
+}
+
+func (TagQuery_TagScope) Type() protoreflect.EnumType {
+	return &file_indexall_v1_resource_proto_enumTypes[2]
+}
+
+func (x TagQuery_TagScope) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TagQuery_TagScope.Descriptor instead.
+func (TagQuery_TagScope) EnumDescriptor() ([]byte, []int) {
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{19, 0}
+}
+
+type KeywordQuery_FieldScope int32
+
+const (
+	KeywordQuery_ALL         KeywordQuery_FieldScope = 0
+	KeywordQuery_TITLE       KeywordQuery_FieldScope = 1
+	KeywordQuery_DESCRIPTION KeywordQuery_FieldScope = 2
+)
+
+// Enum value maps for KeywordQuery_FieldScope.
+var (
+	KeywordQuery_FieldScope_name = map[int32]string{
+		0: "ALL",
+		1: "TITLE",
+		2: "DESCRIPTION",
+	}
+	KeywordQuery_FieldScope_value = map[string]int32{
+		"ALL":         0,
+		"TITLE":       1,
+		"DESCRIPTION": 2,
+	}
+)
+
+func (x KeywordQuery_FieldScope) Enum() *KeywordQuery_FieldScope {
+	p := new(KeywordQuery_FieldScope)
+	*p = x
+	return p
+}
+
+func (x KeywordQuery_FieldScope) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (KeywordQuery_FieldScope) Descriptor() protoreflect.EnumDescriptor {
+	return file_indexall_v1_resource_proto_enumTypes[3].Descriptor()
+}
+
+func (KeywordQuery_FieldScope) Type() protoreflect.EnumType {
+	return &file_indexall_v1_resource_proto_enumTypes[3]
+}
+
+func (x KeywordQuery_FieldScope) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use KeywordQuery_FieldScope.Descriptor instead.
+func (KeywordQuery_FieldScope) EnumDescriptor() ([]byte, []int) {
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{20, 0}
+}
+
+type KeywordQuery_TagScope int32
+
+const (
+	KeywordQuery_DIRECT           KeywordQuery_TagScope = 0
+	KeywordQuery_WITH_ANCESTORS   KeywordQuery_TagScope = 1
+	KeywordQuery_WITH_DESCENDANTS KeywordQuery_TagScope = 2
+)
+
+// Enum value maps for KeywordQuery_TagScope.
+var (
+	KeywordQuery_TagScope_name = map[int32]string{
+		0: "DIRECT",
+		1: "WITH_ANCESTORS",
+		2: "WITH_DESCENDANTS",
+	}
+	KeywordQuery_TagScope_value = map[string]int32{
+		"DIRECT":           0,
+		"WITH_ANCESTORS":   1,
+		"WITH_DESCENDANTS": 2,
+	}
+)
+
+func (x KeywordQuery_TagScope) Enum() *KeywordQuery_TagScope {
+	p := new(KeywordQuery_TagScope)
+	*p = x
+	return p
+}
+
+func (x KeywordQuery_TagScope) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (KeywordQuery_TagScope) Descriptor() protoreflect.EnumDescriptor {
+	return file_indexall_v1_resource_proto_enumTypes[4].Descriptor()
+}
+
+func (KeywordQuery_TagScope) Type() protoreflect.EnumType {
+	return &file_indexall_v1_resource_proto_enumTypes[4]
+}
+
+func (x KeywordQuery_TagScope) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use KeywordQuery_TagScope.Descriptor instead.
+func (KeywordQuery_TagScope) EnumDescriptor() ([]byte, []int) {
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{20, 1}
+}
+
 // ResourceTag represents a tag associated with a resource
 type ResourceTag struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1256,8 +1403,9 @@ type ResourceSearchResult struct {
 	Description   *string                `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	Url           *string                `protobuf:"bytes,5,opt,name=url,proto3,oneof" json:"url,omitempty"`
 	CreatedAt     string                 `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	Tags          []*ResourceTag         `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty"`
-	MatchSource   MatchSource            `protobuf:"varint,8,opt,name=match_source,json=matchSource,proto3,enum=indexall.v1.MatchSource" json:"match_source,omitempty"`
+	UpdatedAt     string                 `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Tags          []*TagInfo             `protobuf:"bytes,8,rep,name=tags,proto3" json:"tags,omitempty"`
+	MatchSource   MatchSource            `protobuf:"varint,9,opt,name=match_source,json=matchSource,proto3,enum=indexall.v1.MatchSource" json:"match_source,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1334,7 +1482,14 @@ func (x *ResourceSearchResult) GetCreatedAt() string {
 	return ""
 }
 
-func (x *ResourceSearchResult) GetTags() []*ResourceTag {
+func (x *ResourceSearchResult) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
+func (x *ResourceSearchResult) GetTags() []*TagInfo {
 	if x != nil {
 		return x.Tags
 	}
@@ -1436,6 +1591,360 @@ func (x *GetByUrlResponse) GetResource() *GetByUrlResponse_Resource {
 	return nil
 }
 
+type TagInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description   *string                `protobuf:"bytes,3,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	Aliases       []string               `protobuf:"bytes,4,rep,name=aliases,proto3" json:"aliases,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TagInfo) Reset() {
+	*x = TagInfo{}
+	mi := &file_indexall_v1_resource_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TagInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TagInfo) ProtoMessage() {}
+
+func (x *TagInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_indexall_v1_resource_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TagInfo.ProtoReflect.Descriptor instead.
+func (*TagInfo) Descriptor() ([]byte, []int) {
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *TagInfo) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *TagInfo) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *TagInfo) GetDescription() string {
+	if x != nil && x.Description != nil {
+		return *x.Description
+	}
+	return ""
+}
+
+func (x *TagInfo) GetAliases() []string {
+	if x != nil {
+		return x.Aliases
+	}
+	return nil
+}
+
+type TagQuery struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TagId         string                 `protobuf:"bytes,1,opt,name=tag_id,json=tagId,proto3" json:"tag_id,omitempty"`
+	TagScope      TagQuery_TagScope      `protobuf:"varint,2,opt,name=tag_scope,json=tagScope,proto3,enum=indexall.v1.TagQuery_TagScope" json:"tag_scope,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TagQuery) Reset() {
+	*x = TagQuery{}
+	mi := &file_indexall_v1_resource_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TagQuery) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TagQuery) ProtoMessage() {}
+
+func (x *TagQuery) ProtoReflect() protoreflect.Message {
+	mi := &file_indexall_v1_resource_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TagQuery.ProtoReflect.Descriptor instead.
+func (*TagQuery) Descriptor() ([]byte, []int) {
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *TagQuery) GetTagId() string {
+	if x != nil {
+		return x.TagId
+	}
+	return ""
+}
+
+func (x *TagQuery) GetTagScope() TagQuery_TagScope {
+	if x != nil {
+		return x.TagScope
+	}
+	return TagQuery_DIRECT
+}
+
+type KeywordQuery struct {
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	Keyword       string                  `protobuf:"bytes,1,opt,name=keyword,proto3" json:"keyword,omitempty"`
+	FieldScope    KeywordQuery_FieldScope `protobuf:"varint,2,opt,name=field_scope,json=fieldScope,proto3,enum=indexall.v1.KeywordQuery_FieldScope" json:"field_scope,omitempty"`
+	TagScope      KeywordQuery_TagScope   `protobuf:"varint,3,opt,name=tag_scope,json=tagScope,proto3,enum=indexall.v1.KeywordQuery_TagScope" json:"tag_scope,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *KeywordQuery) Reset() {
+	*x = KeywordQuery{}
+	mi := &file_indexall_v1_resource_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *KeywordQuery) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*KeywordQuery) ProtoMessage() {}
+
+func (x *KeywordQuery) ProtoReflect() protoreflect.Message {
+	mi := &file_indexall_v1_resource_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use KeywordQuery.ProtoReflect.Descriptor instead.
+func (*KeywordQuery) Descriptor() ([]byte, []int) {
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *KeywordQuery) GetKeyword() string {
+	if x != nil {
+		return x.Keyword
+	}
+	return ""
+}
+
+func (x *KeywordQuery) GetFieldScope() KeywordQuery_FieldScope {
+	if x != nil {
+		return x.FieldScope
+	}
+	return KeywordQuery_ALL
+}
+
+func (x *KeywordQuery) GetTagScope() KeywordQuery_TagScope {
+	if x != nil {
+		return x.TagScope
+	}
+	return KeywordQuery_DIRECT
+}
+
+type ResourceQueryRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Query:
+	//
+	//	*ResourceQueryRequest_TagQuery
+	//	*ResourceQueryRequest_KeywordQuery
+	Query         isResourceQueryRequest_Query `protobuf_oneof:"query"`
+	Page          int32                        `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int32                        `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	SortBy        string                       `protobuf:"bytes,5,opt,name=sort_by,json=sortBy,proto3" json:"sort_by,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResourceQueryRequest) Reset() {
+	*x = ResourceQueryRequest{}
+	mi := &file_indexall_v1_resource_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResourceQueryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResourceQueryRequest) ProtoMessage() {}
+
+func (x *ResourceQueryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_indexall_v1_resource_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResourceQueryRequest.ProtoReflect.Descriptor instead.
+func (*ResourceQueryRequest) Descriptor() ([]byte, []int) {
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *ResourceQueryRequest) GetQuery() isResourceQueryRequest_Query {
+	if x != nil {
+		return x.Query
+	}
+	return nil
+}
+
+func (x *ResourceQueryRequest) GetTagQuery() *TagQuery {
+	if x != nil {
+		if x, ok := x.Query.(*ResourceQueryRequest_TagQuery); ok {
+			return x.TagQuery
+		}
+	}
+	return nil
+}
+
+func (x *ResourceQueryRequest) GetKeywordQuery() *KeywordQuery {
+	if x != nil {
+		if x, ok := x.Query.(*ResourceQueryRequest_KeywordQuery); ok {
+			return x.KeywordQuery
+		}
+	}
+	return nil
+}
+
+func (x *ResourceQueryRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ResourceQueryRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *ResourceQueryRequest) GetSortBy() string {
+	if x != nil {
+		return x.SortBy
+	}
+	return ""
+}
+
+type isResourceQueryRequest_Query interface {
+	isResourceQueryRequest_Query()
+}
+
+type ResourceQueryRequest_TagQuery struct {
+	TagQuery *TagQuery `protobuf:"bytes,1,opt,name=tag_query,json=tagQuery,proto3,oneof"`
+}
+
+type ResourceQueryRequest_KeywordQuery struct {
+	KeywordQuery *KeywordQuery `protobuf:"bytes,2,opt,name=keyword_query,json=keywordQuery,proto3,oneof"`
+}
+
+func (*ResourceQueryRequest_TagQuery) isResourceQueryRequest_Query() {}
+
+func (*ResourceQueryRequest_KeywordQuery) isResourceQueryRequest_Query() {}
+
+type ResourceQueryResponse struct {
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	Items         []*ResourceSearchResult `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	Total         int32                   `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	Page          int32                   `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int32                   `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResourceQueryResponse) Reset() {
+	*x = ResourceQueryResponse{}
+	mi := &file_indexall_v1_resource_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResourceQueryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResourceQueryResponse) ProtoMessage() {}
+
+func (x *ResourceQueryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_indexall_v1_resource_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResourceQueryResponse.ProtoReflect.Descriptor instead.
+func (*ResourceQueryResponse) Descriptor() ([]byte, []int) {
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ResourceQueryResponse) GetItems() []*ResourceSearchResult {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+func (x *ResourceQueryResponse) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *ResourceQueryResponse) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ResourceQueryResponse) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
 type AddTagRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ResourceId    string                 `protobuf:"bytes,1,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`
@@ -1446,7 +1955,7 @@ type AddTagRequest struct {
 
 func (x *AddTagRequest) Reset() {
 	*x = AddTagRequest{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[18]
+	mi := &file_indexall_v1_resource_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1458,7 +1967,7 @@ func (x *AddTagRequest) String() string {
 func (*AddTagRequest) ProtoMessage() {}
 
 func (x *AddTagRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[18]
+	mi := &file_indexall_v1_resource_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1471,7 +1980,7 @@ func (x *AddTagRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddTagRequest.ProtoReflect.Descriptor instead.
 func (*AddTagRequest) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{18}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *AddTagRequest) GetResourceId() string {
@@ -1497,7 +2006,7 @@ type AddTagResponse struct {
 
 func (x *AddTagResponse) Reset() {
 	*x = AddTagResponse{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[19]
+	mi := &file_indexall_v1_resource_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1509,7 +2018,7 @@ func (x *AddTagResponse) String() string {
 func (*AddTagResponse) ProtoMessage() {}
 
 func (x *AddTagResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[19]
+	mi := &file_indexall_v1_resource_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1522,7 +2031,7 @@ func (x *AddTagResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddTagResponse.ProtoReflect.Descriptor instead.
 func (*AddTagResponse) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{19}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *AddTagResponse) GetSuccess() bool {
@@ -1542,7 +2051,7 @@ type RemoveTagRequest struct {
 
 func (x *RemoveTagRequest) Reset() {
 	*x = RemoveTagRequest{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[20]
+	mi := &file_indexall_v1_resource_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1554,7 +2063,7 @@ func (x *RemoveTagRequest) String() string {
 func (*RemoveTagRequest) ProtoMessage() {}
 
 func (x *RemoveTagRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[20]
+	mi := &file_indexall_v1_resource_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1567,7 +2076,7 @@ func (x *RemoveTagRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveTagRequest.ProtoReflect.Descriptor instead.
 func (*RemoveTagRequest) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{20}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *RemoveTagRequest) GetResourceId() string {
@@ -1593,7 +2102,7 @@ type RemoveTagResponse struct {
 
 func (x *RemoveTagResponse) Reset() {
 	*x = RemoveTagResponse{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[21]
+	mi := &file_indexall_v1_resource_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1605,7 +2114,7 @@ func (x *RemoveTagResponse) String() string {
 func (*RemoveTagResponse) ProtoMessage() {}
 
 func (x *RemoveTagResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[21]
+	mi := &file_indexall_v1_resource_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1618,7 +2127,7 @@ func (x *RemoveTagResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveTagResponse.ProtoReflect.Descriptor instead.
 func (*RemoveTagResponse) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{21}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *RemoveTagResponse) GetSuccess() bool {
@@ -1639,7 +2148,7 @@ type GetByUrlResponse_Resource struct {
 
 func (x *GetByUrlResponse_Resource) Reset() {
 	*x = GetByUrlResponse_Resource{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[22]
+	mi := &file_indexall_v1_resource_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1651,7 +2160,7 @@ func (x *GetByUrlResponse_Resource) String() string {
 func (*GetByUrlResponse_Resource) ProtoMessage() {}
 
 func (x *GetByUrlResponse_Resource) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[22]
+	mi := &file_indexall_v1_resource_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1820,7 +2329,7 @@ const file_indexall_v1_resource_proto_rawDesc = "" +
 	"\x05items\x18\x01 \x03(\v2!.indexall.v1.ResourceSearchResultR\x05items\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x05R\x05total\x12\x12\n" +
 	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\"\xb4\x02\n" +
+	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\"\xcf\x02\n" +
 	"\x14ResourceSearchResult\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
 	"\x06source\x18\x02 \x01(\tR\x06source\x12\x14\n" +
@@ -1828,9 +2337,11 @@ const file_indexall_v1_resource_proto_rawDesc = "" +
 	"\vdescription\x18\x04 \x01(\tH\x00R\vdescription\x88\x01\x01\x12\x15\n" +
 	"\x03url\x18\x05 \x01(\tH\x01R\x03url\x88\x01\x01\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x06 \x01(\tR\tcreatedAt\x12,\n" +
-	"\x04tags\x18\a \x03(\v2\x18.indexall.v1.ResourceTagR\x04tags\x12;\n" +
-	"\fmatch_source\x18\b \x01(\x0e2\x18.indexall.v1.MatchSourceR\vmatchSourceB\x0e\n" +
+	"created_at\x18\x06 \x01(\tR\tcreatedAt\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\a \x01(\tR\tupdatedAt\x12(\n" +
+	"\x04tags\x18\b \x03(\v2\x14.indexall.v1.TagInfoR\x04tags\x12;\n" +
+	"\fmatch_source\x18\t \x01(\x0e2\x18.indexall.v1.MatchSourceR\vmatchSourceB\x0e\n" +
 	"\f_descriptionB\x06\n" +
 	"\x04_url\"#\n" +
 	"\x0fGetByUrlRequest\x12\x10\n" +
@@ -1841,7 +2352,48 @@ const file_indexall_v1_resource_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12,\n" +
 	"\x04tags\x18\x03 \x03(\v2\x18.indexall.v1.ResourceTagR\x04tagsB\v\n" +
-	"\t_resource\"G\n" +
+	"\t_resource\"~\n" +
+	"\aTagInfo\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12%\n" +
+	"\vdescription\x18\x03 \x01(\tH\x00R\vdescription\x88\x01\x01\x12\x18\n" +
+	"\aaliases\x18\x04 \x03(\tR\aaliasesB\x0e\n" +
+	"\f_description\"\xa0\x01\n" +
+	"\bTagQuery\x12\x15\n" +
+	"\x06tag_id\x18\x01 \x01(\tR\x05tagId\x12;\n" +
+	"\ttag_scope\x18\x02 \x01(\x0e2\x1e.indexall.v1.TagQuery.TagScopeR\btagScope\"@\n" +
+	"\bTagScope\x12\n" +
+	"\n" +
+	"\x06DIRECT\x10\x00\x12\x12\n" +
+	"\x0eWITH_ANCESTORS\x10\x01\x12\x14\n" +
+	"\x10WITH_DESCENDANTS\x10\x02\"\xa5\x02\n" +
+	"\fKeywordQuery\x12\x18\n" +
+	"\akeyword\x18\x01 \x01(\tR\akeyword\x12E\n" +
+	"\vfield_scope\x18\x02 \x01(\x0e2$.indexall.v1.KeywordQuery.FieldScopeR\n" +
+	"fieldScope\x12?\n" +
+	"\ttag_scope\x18\x03 \x01(\x0e2\".indexall.v1.KeywordQuery.TagScopeR\btagScope\"1\n" +
+	"\n" +
+	"FieldScope\x12\a\n" +
+	"\x03ALL\x10\x00\x12\t\n" +
+	"\x05TITLE\x10\x01\x12\x0f\n" +
+	"\vDESCRIPTION\x10\x02\"@\n" +
+	"\bTagScope\x12\n" +
+	"\n" +
+	"\x06DIRECT\x10\x00\x12\x12\n" +
+	"\x0eWITH_ANCESTORS\x10\x01\x12\x14\n" +
+	"\x10WITH_DESCENDANTS\x10\x02\"\xe1\x01\n" +
+	"\x14ResourceQueryRequest\x124\n" +
+	"\ttag_query\x18\x01 \x01(\v2\x15.indexall.v1.TagQueryH\x00R\btagQuery\x12@\n" +
+	"\rkeyword_query\x18\x02 \x01(\v2\x19.indexall.v1.KeywordQueryH\x00R\fkeywordQuery\x12\x12\n" +
+	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\x12\x17\n" +
+	"\asort_by\x18\x05 \x01(\tR\x06sortByB\a\n" +
+	"\x05query\"\x97\x01\n" +
+	"\x15ResourceQueryResponse\x127\n" +
+	"\x05items\x18\x01 \x03(\v2!.indexall.v1.ResourceSearchResultR\x05items\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\x12\x12\n" +
+	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\"G\n" +
 	"\rAddTagRequest\x12\x1f\n" +
 	"\vresource_id\x18\x01 \x01(\tR\n" +
 	"resourceId\x12\x15\n" +
@@ -1864,14 +2416,13 @@ const file_indexall_v1_resource_proto_rawDesc = "" +
 	"\x12MATCH_SOURCE_TITLE\x10\x01\x12\x1c\n" +
 	"\x18MATCH_SOURCE_DESCRIPTION\x10\x02\x12\x14\n" +
 	"\x10MATCH_SOURCE_TAG\x10\x03\x12\x16\n" +
-	"\x12MATCH_SOURCE_ALIAS\x10\x042\xf4\a\n" +
+	"\x12MATCH_SOURCE_ALIAS\x10\x042\x8b\a\n" +
 	"\x0fResourceService\x12k\n" +
 	"\x06Create\x12\".indexall.v1.CreateResourceRequest\x1a#.indexall.v1.CreateResourceResponse\"\x18\x82\xd3\xe4\x93\x02\x12:\x01*\"\r/v1/resources\x12p\n" +
 	"\x06Update\x12\".indexall.v1.UpdateResourceRequest\x1a#.indexall.v1.UpdateResourceResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*2\x12/v1/resources/{id}\x12m\n" +
 	"\x06Delete\x12\".indexall.v1.DeleteResourceRequest\x1a#.indexall.v1.DeleteResourceResponse\"\x1a\x82\xd3\xe4\x93\x02\x14*\x12/v1/resources/{id}\x12d\n" +
-	"\x03Get\x12\x1f.indexall.v1.GetResourceRequest\x1a .indexall.v1.GetResourceResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/v1/resources/{id}\x12d\n" +
-	"\x04List\x12!.indexall.v1.ListResourcesRequest\x1a\".indexall.v1.ListResourcesResponse\"\x15\x82\xd3\xe4\x93\x02\x0f\x12\r/v1/resources\x12q\n" +
-	"\x06Search\x12#.indexall.v1.SearchResourcesRequest\x1a$.indexall.v1.SearchResourcesResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/resources/search\x12e\n" +
+	"\x03Get\x12\x1f.indexall.v1.GetResourceRequest\x1a .indexall.v1.GetResourceResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/v1/resources/{id}\x12n\n" +
+	"\x05Query\x12!.indexall.v1.ResourceQueryRequest\x1a\".indexall.v1.ResourceQueryResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/resources/query\x12e\n" +
 	"\bGetByUrl\x12\x1c.indexall.v1.GetByUrlRequest\x1a\x1d.indexall.v1.GetByUrlResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/resources/by-url\x12n\n" +
 	"\x06AddTag\x12\x1a.indexall.v1.AddTagRequest\x1a\x1b.indexall.v1.AddTagResponse\"+\x82\xd3\xe4\x93\x02%:\x01*\" /v1/resources/{resource_id}/tags\x12}\n" +
 	"\tRemoveTag\x12\x1d.indexall.v1.RemoveTagRequest\x1a\x1e.indexall.v1.RemoveTagResponse\"1\x82\xd3\xe4\x93\x02+*)/v1/resources/{resource_id}/tags/{tag_id}BFZDgithub.com/construct/indexall/internal/gen/pb/indexall/v1;indexallv1b\x06proto3"
@@ -1888,73 +2439,85 @@ func file_indexall_v1_resource_proto_rawDescGZIP() []byte {
 	return file_indexall_v1_resource_proto_rawDescData
 }
 
-var file_indexall_v1_resource_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_indexall_v1_resource_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_indexall_v1_resource_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_indexall_v1_resource_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_indexall_v1_resource_proto_goTypes = []any{
 	(ResourceStatus)(0),               // 0: indexall.v1.ResourceStatus
 	(MatchSource)(0),                  // 1: indexall.v1.MatchSource
-	(*ResourceTag)(nil),               // 2: indexall.v1.ResourceTag
-	(*Resource)(nil),                  // 3: indexall.v1.Resource
-	(*CreateResourceRequest)(nil),     // 4: indexall.v1.CreateResourceRequest
-	(*CreateResourceResponse)(nil),    // 5: indexall.v1.CreateResourceResponse
-	(*UpdateResourceRequest)(nil),     // 6: indexall.v1.UpdateResourceRequest
-	(*UpdateResourceResponse)(nil),    // 7: indexall.v1.UpdateResourceResponse
-	(*DeleteResourceRequest)(nil),     // 8: indexall.v1.DeleteResourceRequest
-	(*DeleteResourceResponse)(nil),    // 9: indexall.v1.DeleteResourceResponse
-	(*GetResourceRequest)(nil),        // 10: indexall.v1.GetResourceRequest
-	(*GetResourceResponse)(nil),       // 11: indexall.v1.GetResourceResponse
-	(*ListResourcesRequest)(nil),      // 12: indexall.v1.ListResourcesRequest
-	(*ListResourcesResponse)(nil),     // 13: indexall.v1.ListResourcesResponse
-	(*ResourceListItem)(nil),          // 14: indexall.v1.ResourceListItem
-	(*SearchResourcesRequest)(nil),    // 15: indexall.v1.SearchResourcesRequest
-	(*SearchResourcesResponse)(nil),   // 16: indexall.v1.SearchResourcesResponse
-	(*ResourceSearchResult)(nil),      // 17: indexall.v1.ResourceSearchResult
-	(*GetByUrlRequest)(nil),           // 18: indexall.v1.GetByUrlRequest
-	(*GetByUrlResponse)(nil),          // 19: indexall.v1.GetByUrlResponse
-	(*AddTagRequest)(nil),             // 20: indexall.v1.AddTagRequest
-	(*AddTagResponse)(nil),            // 21: indexall.v1.AddTagResponse
-	(*RemoveTagRequest)(nil),          // 22: indexall.v1.RemoveTagRequest
-	(*RemoveTagResponse)(nil),         // 23: indexall.v1.RemoveTagResponse
-	(*GetByUrlResponse_Resource)(nil), // 24: indexall.v1.GetByUrlResponse.Resource
+	(TagQuery_TagScope)(0),            // 2: indexall.v1.TagQuery.TagScope
+	(KeywordQuery_FieldScope)(0),      // 3: indexall.v1.KeywordQuery.FieldScope
+	(KeywordQuery_TagScope)(0),        // 4: indexall.v1.KeywordQuery.TagScope
+	(*ResourceTag)(nil),               // 5: indexall.v1.ResourceTag
+	(*Resource)(nil),                  // 6: indexall.v1.Resource
+	(*CreateResourceRequest)(nil),     // 7: indexall.v1.CreateResourceRequest
+	(*CreateResourceResponse)(nil),    // 8: indexall.v1.CreateResourceResponse
+	(*UpdateResourceRequest)(nil),     // 9: indexall.v1.UpdateResourceRequest
+	(*UpdateResourceResponse)(nil),    // 10: indexall.v1.UpdateResourceResponse
+	(*DeleteResourceRequest)(nil),     // 11: indexall.v1.DeleteResourceRequest
+	(*DeleteResourceResponse)(nil),    // 12: indexall.v1.DeleteResourceResponse
+	(*GetResourceRequest)(nil),        // 13: indexall.v1.GetResourceRequest
+	(*GetResourceResponse)(nil),       // 14: indexall.v1.GetResourceResponse
+	(*ListResourcesRequest)(nil),      // 15: indexall.v1.ListResourcesRequest
+	(*ListResourcesResponse)(nil),     // 16: indexall.v1.ListResourcesResponse
+	(*ResourceListItem)(nil),          // 17: indexall.v1.ResourceListItem
+	(*SearchResourcesRequest)(nil),    // 18: indexall.v1.SearchResourcesRequest
+	(*SearchResourcesResponse)(nil),   // 19: indexall.v1.SearchResourcesResponse
+	(*ResourceSearchResult)(nil),      // 20: indexall.v1.ResourceSearchResult
+	(*GetByUrlRequest)(nil),           // 21: indexall.v1.GetByUrlRequest
+	(*GetByUrlResponse)(nil),          // 22: indexall.v1.GetByUrlResponse
+	(*TagInfo)(nil),                   // 23: indexall.v1.TagInfo
+	(*TagQuery)(nil),                  // 24: indexall.v1.TagQuery
+	(*KeywordQuery)(nil),              // 25: indexall.v1.KeywordQuery
+	(*ResourceQueryRequest)(nil),      // 26: indexall.v1.ResourceQueryRequest
+	(*ResourceQueryResponse)(nil),     // 27: indexall.v1.ResourceQueryResponse
+	(*AddTagRequest)(nil),             // 28: indexall.v1.AddTagRequest
+	(*AddTagResponse)(nil),            // 29: indexall.v1.AddTagResponse
+	(*RemoveTagRequest)(nil),          // 30: indexall.v1.RemoveTagRequest
+	(*RemoveTagResponse)(nil),         // 31: indexall.v1.RemoveTagResponse
+	(*GetByUrlResponse_Resource)(nil), // 32: indexall.v1.GetByUrlResponse.Resource
 }
 var file_indexall_v1_resource_proto_depIdxs = []int32{
 	0,  // 0: indexall.v1.Resource.status:type_name -> indexall.v1.ResourceStatus
-	2,  // 1: indexall.v1.Resource.tags:type_name -> indexall.v1.ResourceTag
-	2,  // 2: indexall.v1.CreateResourceResponse.tags:type_name -> indexall.v1.ResourceTag
+	5,  // 1: indexall.v1.Resource.tags:type_name -> indexall.v1.ResourceTag
+	5,  // 2: indexall.v1.CreateResourceResponse.tags:type_name -> indexall.v1.ResourceTag
 	0,  // 3: indexall.v1.GetResourceResponse.status:type_name -> indexall.v1.ResourceStatus
-	2,  // 4: indexall.v1.GetResourceResponse.tags:type_name -> indexall.v1.ResourceTag
+	5,  // 4: indexall.v1.GetResourceResponse.tags:type_name -> indexall.v1.ResourceTag
 	0,  // 5: indexall.v1.ListResourcesRequest.status:type_name -> indexall.v1.ResourceStatus
-	14, // 6: indexall.v1.ListResourcesResponse.items:type_name -> indexall.v1.ResourceListItem
+	17, // 6: indexall.v1.ListResourcesResponse.items:type_name -> indexall.v1.ResourceListItem
 	0,  // 7: indexall.v1.ResourceListItem.status:type_name -> indexall.v1.ResourceStatus
-	2,  // 8: indexall.v1.ResourceListItem.tags:type_name -> indexall.v1.ResourceTag
-	17, // 9: indexall.v1.SearchResourcesResponse.items:type_name -> indexall.v1.ResourceSearchResult
-	2,  // 10: indexall.v1.ResourceSearchResult.tags:type_name -> indexall.v1.ResourceTag
+	5,  // 8: indexall.v1.ResourceListItem.tags:type_name -> indexall.v1.ResourceTag
+	20, // 9: indexall.v1.SearchResourcesResponse.items:type_name -> indexall.v1.ResourceSearchResult
+	23, // 10: indexall.v1.ResourceSearchResult.tags:type_name -> indexall.v1.TagInfo
 	1,  // 11: indexall.v1.ResourceSearchResult.match_source:type_name -> indexall.v1.MatchSource
-	24, // 12: indexall.v1.GetByUrlResponse.resource:type_name -> indexall.v1.GetByUrlResponse.Resource
-	2,  // 13: indexall.v1.GetByUrlResponse.Resource.tags:type_name -> indexall.v1.ResourceTag
-	4,  // 14: indexall.v1.ResourceService.Create:input_type -> indexall.v1.CreateResourceRequest
-	6,  // 15: indexall.v1.ResourceService.Update:input_type -> indexall.v1.UpdateResourceRequest
-	8,  // 16: indexall.v1.ResourceService.Delete:input_type -> indexall.v1.DeleteResourceRequest
-	10, // 17: indexall.v1.ResourceService.Get:input_type -> indexall.v1.GetResourceRequest
-	12, // 18: indexall.v1.ResourceService.List:input_type -> indexall.v1.ListResourcesRequest
-	15, // 19: indexall.v1.ResourceService.Search:input_type -> indexall.v1.SearchResourcesRequest
-	18, // 20: indexall.v1.ResourceService.GetByUrl:input_type -> indexall.v1.GetByUrlRequest
-	20, // 21: indexall.v1.ResourceService.AddTag:input_type -> indexall.v1.AddTagRequest
-	22, // 22: indexall.v1.ResourceService.RemoveTag:input_type -> indexall.v1.RemoveTagRequest
-	5,  // 23: indexall.v1.ResourceService.Create:output_type -> indexall.v1.CreateResourceResponse
-	7,  // 24: indexall.v1.ResourceService.Update:output_type -> indexall.v1.UpdateResourceResponse
-	9,  // 25: indexall.v1.ResourceService.Delete:output_type -> indexall.v1.DeleteResourceResponse
-	11, // 26: indexall.v1.ResourceService.Get:output_type -> indexall.v1.GetResourceResponse
-	13, // 27: indexall.v1.ResourceService.List:output_type -> indexall.v1.ListResourcesResponse
-	16, // 28: indexall.v1.ResourceService.Search:output_type -> indexall.v1.SearchResourcesResponse
-	19, // 29: indexall.v1.ResourceService.GetByUrl:output_type -> indexall.v1.GetByUrlResponse
-	21, // 30: indexall.v1.ResourceService.AddTag:output_type -> indexall.v1.AddTagResponse
-	23, // 31: indexall.v1.ResourceService.RemoveTag:output_type -> indexall.v1.RemoveTagResponse
-	23, // [23:32] is the sub-list for method output_type
-	14, // [14:23] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	32, // 12: indexall.v1.GetByUrlResponse.resource:type_name -> indexall.v1.GetByUrlResponse.Resource
+	2,  // 13: indexall.v1.TagQuery.tag_scope:type_name -> indexall.v1.TagQuery.TagScope
+	3,  // 14: indexall.v1.KeywordQuery.field_scope:type_name -> indexall.v1.KeywordQuery.FieldScope
+	4,  // 15: indexall.v1.KeywordQuery.tag_scope:type_name -> indexall.v1.KeywordQuery.TagScope
+	24, // 16: indexall.v1.ResourceQueryRequest.tag_query:type_name -> indexall.v1.TagQuery
+	25, // 17: indexall.v1.ResourceQueryRequest.keyword_query:type_name -> indexall.v1.KeywordQuery
+	20, // 18: indexall.v1.ResourceQueryResponse.items:type_name -> indexall.v1.ResourceSearchResult
+	5,  // 19: indexall.v1.GetByUrlResponse.Resource.tags:type_name -> indexall.v1.ResourceTag
+	7,  // 20: indexall.v1.ResourceService.Create:input_type -> indexall.v1.CreateResourceRequest
+	9,  // 21: indexall.v1.ResourceService.Update:input_type -> indexall.v1.UpdateResourceRequest
+	11, // 22: indexall.v1.ResourceService.Delete:input_type -> indexall.v1.DeleteResourceRequest
+	13, // 23: indexall.v1.ResourceService.Get:input_type -> indexall.v1.GetResourceRequest
+	26, // 24: indexall.v1.ResourceService.Query:input_type -> indexall.v1.ResourceQueryRequest
+	21, // 25: indexall.v1.ResourceService.GetByUrl:input_type -> indexall.v1.GetByUrlRequest
+	28, // 26: indexall.v1.ResourceService.AddTag:input_type -> indexall.v1.AddTagRequest
+	30, // 27: indexall.v1.ResourceService.RemoveTag:input_type -> indexall.v1.RemoveTagRequest
+	8,  // 28: indexall.v1.ResourceService.Create:output_type -> indexall.v1.CreateResourceResponse
+	10, // 29: indexall.v1.ResourceService.Update:output_type -> indexall.v1.UpdateResourceResponse
+	12, // 30: indexall.v1.ResourceService.Delete:output_type -> indexall.v1.DeleteResourceResponse
+	14, // 31: indexall.v1.ResourceService.Get:output_type -> indexall.v1.GetResourceResponse
+	27, // 32: indexall.v1.ResourceService.Query:output_type -> indexall.v1.ResourceQueryResponse
+	22, // 33: indexall.v1.ResourceService.GetByUrl:output_type -> indexall.v1.GetByUrlResponse
+	29, // 34: indexall.v1.ResourceService.AddTag:output_type -> indexall.v1.AddTagResponse
+	31, // 35: indexall.v1.ResourceService.RemoveTag:output_type -> indexall.v1.RemoveTagResponse
+	28, // [28:36] is the sub-list for method output_type
+	20, // [20:28] is the sub-list for method input_type
+	20, // [20:20] is the sub-list for extension type_name
+	20, // [20:20] is the sub-list for extension extendee
+	0,  // [0:20] is the sub-list for field type_name
 }
 
 func init() { file_indexall_v1_resource_proto_init() }
@@ -1972,13 +2535,18 @@ func file_indexall_v1_resource_proto_init() {
 	file_indexall_v1_resource_proto_msgTypes[12].OneofWrappers = []any{}
 	file_indexall_v1_resource_proto_msgTypes[15].OneofWrappers = []any{}
 	file_indexall_v1_resource_proto_msgTypes[17].OneofWrappers = []any{}
+	file_indexall_v1_resource_proto_msgTypes[18].OneofWrappers = []any{}
+	file_indexall_v1_resource_proto_msgTypes[21].OneofWrappers = []any{
+		(*ResourceQueryRequest_TagQuery)(nil),
+		(*ResourceQueryRequest_KeywordQuery)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_indexall_v1_resource_proto_rawDesc), len(file_indexall_v1_resource_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   23,
+			NumEnums:      5,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
