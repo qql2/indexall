@@ -64,11 +64,6 @@ CREATE TABLE IF NOT EXISTS resource_tags (
 CREATE INDEX IF NOT EXISTS idx_resource_tags_resource ON resource_tags(resource_id);
 CREATE INDEX IF NOT EXISTS idx_resource_tags_tag ON resource_tags(tag_id);
 
--- FTS5 virtual table for full-text search
-CREATE VIRTUAL TABLE IF NOT EXISTS resources_fts USING fts5(
-  resource_id UNINDEXED,
-  title,
-  description,
-  content=resources,
-  content_rowid=rowid
-);
+-- FTS5 virtual table for full-text search (optional, may not be available in all SQLite builds)
+-- This table is maintained by triggers and provides full-text search capability
+-- If FTS5 is not available, queries will fall back to LIKE searches

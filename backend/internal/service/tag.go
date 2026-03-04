@@ -229,28 +229,128 @@ func (s *TagService) Search(ctx context.Context, req *indexallv1.SearchTagsReque
 		return nil, status.Error(codes.InvalidArgument, "query is required")
 	}
 
-	// Search tags by name or alias
-	query := "%" + req.Query + "%"
-	tags, err := s.q.SearchTags(ctx, gen.SearchTagsParams{
-		Name:   query,
-		Name_2: query,
-		Alias:  query,
-	})
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to search tags: %v", err)
+	// Set defaults
+	limit := req.Limit
+	if limit < 1 {
+		limit = 20
+	}
+	offset := req.Offset
+	if offset < 0 {
+		offset = 0
 	}
 
-	results := make([]*indexallv1.TagSearchResult, len(tags))
-	for i, tag := range tags {
-		results[i] = &indexallv1.TagSearchResult{
-			Id:    tag.ID,
-			Name:  tag.Name,
-			Color: nullStringToPointer(tag.Color),
+	// Use LIKE for keyword matching (FTS5 fallback)
+	likeQuery := "%" + req.Query + "%"
+
+	// Build tag scope clause (search in tag name and aliases)
+	var tagScopeClause string
+	switch req.TagScope {
+	case indexallv1.SearchTagsRequest_DIRECT:
+		tagScopeClause = ""
+	case indexallv1.SearchTagsRequest_WITH_ANCESTORS:
+		tagScopeClause = `WITH RECURSIVE ancestors AS (
+			SELECT t.id FROM tags t
+			WHERE t.name LIKE ? OR t.id IN (
+				SELECT tag_id FROM tag_aliases WHERE alias LIKE ?
+			)
+			UNION ALL
+			SELECT tr.parent_id FROM tag_relations tr
+			JOIN ancestors a ON tr.child_id = a.id
+		) SELECT DISTINCT id FROM ancestors`
+	case indexallv1.SearchTagsRequest_WITH_DESCENDANTS:
+		tagScopeClause = `WITH RECURSIVE descendants AS (
+			SELECT t.id FROM tags t
+			WHERE t.name LIKE ? OR t.id IN (
+				SELECT tag_id FROM tag_aliases WHERE alias LIKE ?
+			)
+			UNION ALL
+			SELECT tr.child_id FROM tag_relations tr
+			JOIN descendants d ON tr.parent_id = d.id
+		) SELECT DISTINCT id FROM descendants`
+	default:
+		tagScopeClause = ""
+	}
+
+	// Query count
+	var countQuery string
+	var countErr error
+	var total int64
+
+	if req.TagScope == indexallv1.SearchTagsRequest_DIRECT {
+		countQuery = `SELECT COUNT(DISTINCT t.id) FROM tags t
+			LEFT JOIN tag_aliases ta ON t.id = ta.tag_id
+			WHERE t.name LIKE ? OR ta.alias LIKE ?`
+		countErr = s.db.QueryRowContext(ctx, countQuery, likeQuery, likeQuery).Scan(&total)
+	} else {
+		countQuery = `SELECT COUNT(*) FROM (` + tagScopeClause + `)`
+		countErr = s.db.QueryRowContext(ctx, countQuery, likeQuery, likeQuery).Scan(&total)
+	}
+
+	if countErr != nil && countErr != sql.ErrNoRows {
+		return nil, status.Errorf(codes.Internal, "failed to count tags: %v", countErr)
+	}
+
+	// Query tags
+	var dataQuery string
+	var rows *sql.Rows
+	var queryErr error
+
+	if req.TagScope == indexallv1.SearchTagsRequest_DIRECT {
+		dataQuery = `SELECT DISTINCT t.id, t.name, t.color, t.created_at
+			FROM tags t
+			LEFT JOIN tag_aliases ta ON t.id = ta.tag_id
+			WHERE t.name LIKE ? OR ta.alias LIKE ?
+			ORDER BY t.name ASC
+			LIMIT ? OFFSET ?`
+		rows, queryErr = s.db.QueryContext(ctx, dataQuery, likeQuery, likeQuery, limit, offset)
+	} else {
+		dataQuery = `SELECT DISTINCT t.id, t.name, t.color, t.created_at FROM tags t
+			WHERE t.id IN (` + tagScopeClause + `)
+			ORDER BY t.name ASC
+			LIMIT ? OFFSET ?`
+		rows, queryErr = s.db.QueryContext(ctx, dataQuery, likeQuery, likeQuery, limit, offset)
+	}
+
+	if queryErr != nil {
+		return nil, status.Errorf(codes.Internal, "failed to query tags: %v", queryErr)
+	}
+	defer rows.Close()
+
+	results := make([]*indexallv1.TagSearchResult, 0)
+	for rows.Next() {
+		var tagID, name string
+		var color sql.NullString
+		var createdAt sql.NullTime
+
+		if err := rows.Scan(&tagID, &name, &color, &createdAt); err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to scan tag: %v", err)
 		}
+
+		// Get aliases
+		aliases := make([]string, 0)
+		aliasRows, err := s.q.ListAliasesByTag(ctx, tagID)
+		if err == nil {
+			for _, a := range aliasRows {
+				aliases = append(aliases, a.Alias)
+			}
+		}
+
+		// Get resource count
+		resourceCount, _ := s.q.CountResourcesForTag(ctx, tagID)
+
+		results = append(results, &indexallv1.TagSearchResult{
+			Id:            tagID,
+			Name:          name,
+			Color:         nullStringToPointer(color),
+			Description:   nil, // TODO: Add description field to tags table
+			Aliases:       aliases,
+			ResourceCount: int32(resourceCount),
+		})
 	}
 
 	return &indexallv1.SearchTagsResponse{
 		Results: results,
+		Total:   int32(total),
 	}, nil
 }
 

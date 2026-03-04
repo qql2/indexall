@@ -35,7 +35,7 @@ wire:
 .PHONY: build
 # build
 build:
-	mkdir -p bin/ && go build -ldflags "-X main.Version=$(VERSION)" -o ./bin/ ./cmd/server
+	mkdir -p bin/ && CGO_ENABLED=1 go build -ldflags "-X main.Version=$(VERSION)" -o ./bin/ ./cmd/server
 
 .PHONY: generate
 # generate

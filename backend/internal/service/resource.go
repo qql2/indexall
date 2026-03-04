@@ -204,117 +204,6 @@ func (s *ResourceService) Get(ctx context.Context, req *indexallv1.GetResourceRe
 	}, nil
 }
 
-func (s *ResourceService) List(ctx context.Context, req *indexallv1.ListResourcesRequest) (*indexallv1.ListResourcesResponse, error) {
-	var statusFilter sql.NullString
-	if req.Status != nil && *req.Status != indexallv1.ResourceStatus_RESOURCE_STATUS_UNSPECIFIED {
-		// Map proto enum to database string value
-		statusFilter = sql.NullString{String: req.Status.String(), Valid: true}
-	}
-
-	resources, err := s.q.ListResources(ctx, gen.ListResourcesParams{
-		Status: statusFilter,
-		Limit:  int64(req.PageSize),
-		Offset: int64((req.Page - 1) * req.PageSize),
-	})
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to list resources: %v", err)
-	}
-
-	// Get total count
-	count, _ := s.q.CountResources(ctx, statusFilter)
-
-	items := make([]*indexallv1.ResourceListItem, len(resources))
-	for i, resource := range resources {
-		// Get tags
-		tags := make([]*indexallv1.ResourceTag, 0)
-		tagRows, err := s.q.GetResourceTags(ctx, resource.ID)
-		if err == nil {
-			for _, t := range tagRows {
-				tags = append(tags, &indexallv1.ResourceTag{
-					Id:    t.TagID,
-					Name:  t.Name,
-					Color: nullStringToPointer(t.Color),
-				})
-			}
-		}
-
-		items[i] = &indexallv1.ResourceListItem{
-			Id:          resource.ID,
-			Source:      resource.Source,
-			Title:       resource.Title,
-			Description: nullStringToPointer(resource.Description),
-			Url:         nullStringToPointer(resource.Url),
-			Status:      indexallv1.ResourceStatus_RESOURCE_STATUS_ACTIVE,
-			CreatedAt:   nullTimeToString(resource.CreatedAt),
-			Tags:        tags,
-		}
-	}
-
-	return &indexallv1.ListResourcesResponse{
-		Items:    items,
-		Total:    int32(count),
-		Page:     req.Page,
-		PageSize: req.PageSize,
-	}, nil
-}
-
-func (s *ResourceService) Search(ctx context.Context, req *indexallv1.SearchResourcesRequest) (*indexallv1.SearchResourcesResponse, error) {
-	if req.Query == "" {
-		return nil, status.Error(codes.InvalidArgument, "query is required")
-	}
-
-	// TODO: Implement FTS5 search
-	// For now, use simple LIKE search
-	query := "%" + req.Query + "%"
-
-	resources, err := s.q.ListResources(ctx, gen.ListResourcesParams{
-		Status: sql.NullString{Valid: false},
-		Limit:  int64(req.PageSize),
-		Offset: int64((req.Page - 1) * req.PageSize),
-	})
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to search resources: %v", err)
-	}
-
-	_ = query // TODO: use query in search
-
-	items := make([]*indexallv1.ResourceSearchResult, len(resources))
-	for i, resource := range resources {
-		// Get tags
-		tags := make([]*indexallv1.ResourceTag, 0)
-		tagRows, err := s.q.GetResourceTags(ctx, resource.ID)
-		if err == nil {
-			for _, t := range tagRows {
-				tags = append(tags, &indexallv1.ResourceTag{
-					Id:    t.TagID,
-					Name:  t.Name,
-					Color: nullStringToPointer(t.Color),
-				})
-			}
-		}
-
-		items[i] = &indexallv1.ResourceSearchResult{
-			Id:          resource.ID,
-			Source:      resource.Source,
-			Title:       resource.Title,
-			Description: nullStringToPointer(resource.Description),
-			Url:         nullStringToPointer(resource.Url),
-			CreatedAt:   nullTimeToString(resource.CreatedAt),
-			Tags:        tags,
-			MatchSource: indexallv1.MatchSource_MATCH_SOURCE_UNSPECIFIED,
-		}
-	}
-
-	count, _ := s.q.CountResources(ctx, sql.NullString{Valid: false})
-
-	return &indexallv1.SearchResourcesResponse{
-		Items:    items,
-		Total:    int32(count),
-		Page:     req.Page,
-		PageSize: req.PageSize,
-	}, nil
-}
-
 func (s *ResourceService) GetByUrl(ctx context.Context, req *indexallv1.GetByUrlRequest) (*indexallv1.GetByUrlResponse, error) {
 	if req.Url == "" {
 		return nil, status.Error(codes.InvalidArgument, "url is required")
@@ -413,4 +302,288 @@ func (s *ResourceService) RemoveTag(ctx context.Context, req *indexallv1.RemoveT
 	return &indexallv1.RemoveTagResponse{
 		Success: true,
 	}, nil
+}
+
+func (s *ResourceService) Query(ctx context.Context, req *indexallv1.ResourceQueryRequest) (*indexallv1.ResourceQueryResponse, error) {
+	// Set defaults
+	page := req.Page
+	if page < 1 {
+		page = 1
+	}
+	pageSize := req.PageSize
+	if pageSize < 1 {
+		pageSize = 20
+	}
+	offset := (page - 1) * pageSize
+
+	var resources []gen.Resource
+	var total int64
+	var err error
+
+	switch queryType := req.Query.(type) {
+	case *indexallv1.ResourceQueryRequest_TagQuery:
+		resources, total, err = s.queryByTag(ctx, queryType.TagQuery, offset, pageSize)
+	case *indexallv1.ResourceQueryRequest_KeywordQuery:
+		resources, total, err = s.queryByKeyword(ctx, queryType.KeywordQuery, offset, pageSize)
+	default:
+		return nil, status.Error(codes.InvalidArgument, "query is required")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Build response
+	items := make([]*indexallv1.ResourceSearchResult, len(resources))
+	for i, resource := range resources {
+		// Get tags
+		tags := make([]*indexallv1.TagInfo, 0)
+		tagRows, err := s.q.GetResourceTags(ctx, resource.ID)
+		if err == nil {
+			for _, t := range tagRows {
+				// Get tag aliases
+				aliases := make([]string, 0)
+				aliasRows, aliasErr := s.q.ListAliasesByTag(ctx, t.TagID)
+				if aliasErr == nil {
+					for _, a := range aliasRows {
+						aliases = append(aliases, a.Alias)
+					}
+				}
+
+				tags = append(tags, &indexallv1.TagInfo{
+					Id:       t.TagID,
+					Name:     t.Name,
+					Aliases:  aliases,
+				})
+			}
+		}
+
+		items[i] = &indexallv1.ResourceSearchResult{
+			Id:          resource.ID,
+			Source:      resource.Source,
+			Title:       resource.Title,
+			Description: nullStringToPointer(resource.Description),
+			Url:         nullStringToPointer(resource.Url),
+			CreatedAt:   nullTimeToString(resource.CreatedAt),
+			UpdatedAt:   nullTimeToString(resource.UpdatedAt),
+			Tags:        tags,
+			MatchSource: indexallv1.MatchSource_MATCH_SOURCE_UNSPECIFIED,
+		}
+	}
+
+	return &indexallv1.ResourceQueryResponse{
+		Items:    items,
+		Total:    int32(total),
+		Page:     page,
+		PageSize: pageSize,
+	}, nil
+}
+
+// queryByTag queries resources by tag with different scopes
+func (s *ResourceService) queryByTag(ctx context.Context, tq *indexallv1.TagQuery, offset, limit int32) ([]gen.Resource, int64, error) {
+	if tq.TagId == "" {
+		return nil, 0, status.Error(codes.InvalidArgument, "tag_id is required")
+	}
+
+	// Verify tag exists
+	if _, err := s.q.GetTag(ctx, tq.TagId); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, 0, status.Error(codes.NotFound, "tag not found")
+		}
+		return nil, 0, status.Errorf(codes.Internal, "failed to get tag: %v", err)
+	}
+
+	// Build recursive CTE based on scope
+	var withClause string
+	switch tq.TagScope {
+	case indexallv1.TagQuery_DIRECT:
+		withClause = "WITH tag_ids AS (SELECT ? AS id)"
+	case indexallv1.TagQuery_WITH_ANCESTORS:
+		withClause = `WITH RECURSIVE ancestors AS (
+			SELECT id FROM tags WHERE id = ?
+			UNION ALL
+			SELECT tr.parent_id FROM tag_relations tr JOIN ancestors a ON tr.child_id = a.id
+		), tag_ids AS (SELECT id FROM ancestors)`
+	case indexallv1.TagQuery_WITH_DESCENDANTS:
+		withClause = `WITH RECURSIVE descendants AS (
+			SELECT id FROM tags WHERE id = ?
+			UNION ALL
+			SELECT tr.child_id FROM tag_relations tr JOIN descendants d ON tr.parent_id = d.id
+		), tag_ids AS (SELECT id FROM descendants)`
+	default:
+		return nil, 0, status.Error(codes.InvalidArgument, "invalid tag_scope")
+	}
+
+	// Query total count
+	countQuery := withClause + `
+		SELECT COUNT(DISTINCT r.id) FROM resources r
+		JOIN resource_tags rt ON r.id = rt.resource_id
+		WHERE rt.tag_id IN (SELECT id FROM tag_ids)`
+
+	var total int64
+	err := s.db.QueryRowContext(ctx, countQuery, tq.TagId).Scan(&total)
+	if err != nil {
+		return nil, 0, status.Errorf(codes.Internal, "failed to count resources: %v", err)
+	}
+
+	// Query resources
+	dataQuery := withClause + `
+		SELECT DISTINCT r.id, r.source, r.external_id, r.title, r.description, r.url, r.open_with, r.metadata, r.status, r.synced_at, r.created_at, r.updated_at
+		FROM resources r
+		JOIN resource_tags rt ON r.id = rt.resource_id
+		WHERE rt.tag_id IN (SELECT id FROM tag_ids)
+		ORDER BY r.created_at DESC
+		LIMIT ? OFFSET ?`
+
+	rows, err := s.db.QueryContext(ctx, dataQuery, tq.TagId, limit, offset)
+	if err != nil {
+		return nil, 0, status.Errorf(codes.Internal, "failed to query resources: %v", err)
+	}
+	defer rows.Close()
+
+	var resources []gen.Resource
+	for rows.Next() {
+		var r gen.Resource
+		err := rows.Scan(&r.ID, &r.Source, &r.ExternalID, &r.Title, &r.Description, &r.Url, &r.OpenWith, &r.Metadata, &r.Status, &r.SyncedAt, &r.CreatedAt, &r.UpdatedAt)
+		if err != nil {
+			return nil, 0, status.Errorf(codes.Internal, "failed to scan resource: %v", err)
+		}
+		resources = append(resources, r)
+	}
+
+	return resources, total, nil
+}
+
+// queryByKeyword queries resources by keyword using LIKE (FTS5 fallback)
+func (s *ResourceService) queryByKeyword(ctx context.Context, kq *indexallv1.KeywordQuery, offset, limit int32) ([]gen.Resource, int64, error) {
+	if kq.Keyword == "" {
+		return nil, 0, status.Error(codes.InvalidArgument, "keyword is required")
+	}
+
+	// Use LIKE for keyword matching (FTS5 fallback)
+	likeKeyword := "%" + kq.Keyword + "%"
+
+	// Build WHERE clause based on field scope
+	var whereClause string
+	switch kq.FieldScope {
+	case indexallv1.KeywordQuery_ALL:
+		whereClause = "(r.title LIKE ? OR r.description LIKE ?)"
+	case indexallv1.KeywordQuery_TITLE:
+		whereClause = "r.title LIKE ?"
+	case indexallv1.KeywordQuery_DESCRIPTION:
+		whereClause = "r.description LIKE ?"
+	default:
+		return nil, 0, status.Error(codes.InvalidArgument, "invalid field_scope")
+	}
+
+	// Build tag scope recursion (without WHERE keyword)
+	var tagScopeClause string
+	switch kq.TagScope {
+	case indexallv1.KeywordQuery_DIRECT:
+		tagScopeClause = `rt.tag_id IN (
+			SELECT DISTINCT rt2.tag_id FROM resource_tags rt2
+		)`
+	case indexallv1.KeywordQuery_WITH_ANCESTORS:
+		tagScopeClause = `rt.tag_id IN (
+			WITH RECURSIVE ancestors AS (
+				SELECT t.id FROM tags t
+				JOIN resource_tags rt2 ON t.id = rt2.tag_id
+				WHERE rt2.resource_id IN (
+					SELECT r.id FROM resources r WHERE ` + whereClause + `
+				)
+				UNION ALL
+				SELECT tr.parent_id FROM tag_relations tr
+				JOIN ancestors a ON tr.child_id = a.id
+			)
+			SELECT id FROM ancestors
+		)`
+	case indexallv1.KeywordQuery_WITH_DESCENDANTS:
+		tagScopeClause = `rt.tag_id IN (
+			WITH RECURSIVE descendants AS (
+				SELECT t.id FROM tags t
+				JOIN resource_tags rt2 ON t.id = rt2.tag_id
+				WHERE rt2.resource_id IN (
+					SELECT r.id FROM resources r WHERE ` + whereClause + `
+				)
+				UNION ALL
+				SELECT tr.child_id FROM tag_relations tr
+				JOIN descendants d ON tr.parent_id = d.id
+			)
+			SELECT id FROM descendants
+		)`
+	default:
+		return nil, 0, status.Error(codes.InvalidArgument, "invalid tag_scope")
+	}
+
+	// Query count
+	countQuery := `SELECT COUNT(DISTINCT r.id) FROM resources r
+		JOIN resource_tags rt ON r.id = rt.resource_id
+		WHERE ` + whereClause + ` AND ` + tagScopeClause
+
+	var total int64
+	var countErr error
+	if kq.FieldScope == indexallv1.KeywordQuery_ALL {
+		// ALL: need two parameters
+		if kq.TagScope == indexallv1.KeywordQuery_DIRECT {
+			countErr = s.db.QueryRowContext(ctx, countQuery, likeKeyword, likeKeyword).Scan(&total)
+		} else {
+			countErr = s.db.QueryRowContext(ctx, countQuery, likeKeyword, likeKeyword, likeKeyword, likeKeyword).Scan(&total)
+		}
+	} else {
+		// TITLE or DESCRIPTION: single parameter
+		if kq.TagScope == indexallv1.KeywordQuery_DIRECT {
+			countErr = s.db.QueryRowContext(ctx, countQuery, likeKeyword).Scan(&total)
+		} else {
+			countErr = s.db.QueryRowContext(ctx, countQuery, likeKeyword, likeKeyword).Scan(&total)
+		}
+	}
+	if countErr != nil && countErr != sql.ErrNoRows {
+		return nil, 0, status.Errorf(codes.Internal, "failed to count resources: %v", countErr)
+	}
+
+	// Query resources
+	dataQuery := `SELECT DISTINCT r.id, r.source, r.external_id, r.title, r.description, r.url, r.open_with, r.metadata, r.status, r.synced_at, r.created_at, r.updated_at
+		FROM resources r
+		JOIN resource_tags rt ON r.id = rt.resource_id
+		WHERE ` + whereClause + ` AND ` + tagScopeClause + `
+		ORDER BY r.created_at DESC
+		LIMIT ? OFFSET ?`
+
+	// Debug: uncomment to see generated SQL
+	// fmt.Printf("CountQuery: %s\n", countQuery)
+	// fmt.Printf("DataQuery: %s\n", dataQuery)
+
+	var rows *sql.Rows
+	var queryErr error
+	if kq.FieldScope == indexallv1.KeywordQuery_ALL {
+		// ALL: need two parameters + LIMIT/OFFSET
+		if kq.TagScope == indexallv1.KeywordQuery_DIRECT {
+			rows, queryErr = s.db.QueryContext(ctx, dataQuery, likeKeyword, likeKeyword, limit, offset)
+		} else {
+			rows, queryErr = s.db.QueryContext(ctx, dataQuery, likeKeyword, likeKeyword, likeKeyword, likeKeyword, limit, offset)
+		}
+	} else {
+		// TITLE or DESCRIPTION: single parameter + LIMIT/OFFSET
+		if kq.TagScope == indexallv1.KeywordQuery_DIRECT {
+			rows, queryErr = s.db.QueryContext(ctx, dataQuery, likeKeyword, limit, offset)
+		} else {
+			rows, queryErr = s.db.QueryContext(ctx, dataQuery, likeKeyword, likeKeyword, limit, offset)
+		}
+	}
+	if queryErr != nil {
+		return nil, 0, status.Errorf(codes.Internal, "failed to query resources: %v", queryErr)
+	}
+	defer rows.Close()
+
+	var resources []gen.Resource
+	for rows.Next() {
+		var r gen.Resource
+		scanErr := rows.Scan(&r.ID, &r.Source, &r.ExternalID, &r.Title, &r.Description, &r.Url, &r.OpenWith, &r.Metadata, &r.Status, &r.SyncedAt, &r.CreatedAt, &r.UpdatedAt)
+		if scanErr != nil {
+			return nil, 0, status.Errorf(codes.Internal, "failed to scan resource: %v", scanErr)
+		}
+		resources = append(resources, r)
+	}
+
+	return resources, total, nil
 }

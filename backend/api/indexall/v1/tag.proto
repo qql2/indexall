@@ -83,17 +83,30 @@ message GetTreeResponse {
 
 message SearchTagsRequest {
   string query = 1;
+
+  enum TagScope {
+    DIRECT = 0;
+    WITH_ANCESTORS = 1;
+    WITH_DESCENDANTS = 2;
+  }
+  TagScope tag_scope = 2;
+
+  int32 limit = 3;
+  int32 offset = 4;
 }
 
 message SearchTagsResponse {
   repeated TagSearchResult results = 1;
+  int32 total = 2;
 }
 
 message TagSearchResult {
   string id = 1;
   string name = 2;
   optional string color = 3;
-  optional string matched_alias = 4;
+  optional string description = 4;
+  repeated string aliases = 5;
+  int32 resource_count = 6;
 }
 
 message AddAliasRequest {

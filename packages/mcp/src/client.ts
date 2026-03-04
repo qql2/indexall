@@ -1,14 +1,9 @@
 /**
- * HTTP API Client for IndexAll gRPC-Gateway
- *
- * This is a hand-written client that calls the gRPC-Gateway HTTP endpoints.
- * The backend serves both gRPC and HTTP (via gRPC-Gateway) on the same port.
+ * IndexAll HTTP API Client for MCP Server
+ * Calls the gRPC-Gateway HTTP endpoints on the backend
  */
 
-const API_BASE_URL =
-  typeof window !== "undefined" && (window as any).__ENV?.API_URL
-    ? (window as any).__ENV.API_URL
-    : "";
+const API_BASE_URL = process.env.INDEXALL_API_URL || "http://localhost:8080";
 
 export interface ApiError {
   code: string;
@@ -49,7 +44,7 @@ async function makeRequest<T>(
 }
 
 // ============================================================================
-// Tag API
+// Tag API Types
 // ============================================================================
 
 export interface Tag {
@@ -135,16 +130,6 @@ export interface SearchTagsResponse {
   total: number;
 }
 
-export interface AddAliasRequest {
-  tag_id: string;
-  alias: string;
-}
-
-export interface AddAliasResponse {
-  id: string;
-  alias: string;
-}
-
 export const tagApi = {
   create: (data: CreateTagRequest) =>
     makeRequest<CreateTagResponse>("POST", "/tags", data),
@@ -152,7 +137,7 @@ export const tagApi = {
   update: (id: string, data: UpdateTagRequest) =>
     makeRequest<UpdateTagResponse>("PATCH", `/tags/${id}`, {
       ...data,
-      id: undefined, // Remove id from body
+      id: undefined,
     }),
 
   delete: (id: string) =>
@@ -162,14 +147,16 @@ export const tagApi = {
 
   getTree: () => makeRequest<GetTreeResponse>("GET", "/tags/tree"),
 
-  search: (query: string) =>
-    makeRequest<SearchTagsResponse>(
-      "GET",
-      `/tags/search?query=${encodeURIComponent(query)}`,
-    ),
+  search: (query: string, tagScope?: string) => {
+    let path = `/tags/search?query=${encodeURIComponent(query)}`;
+    if (tagScope) path += `&tag_scope=${tagScope}`;
+    return makeRequest<SearchTagsResponse>("GET", path);
+  },
 
   addAlias: (tagId: string, alias: string) =>
-    makeRequest<AddAliasResponse>("POST", `/tags/${tagId}/aliases`, { alias }),
+    makeRequest<{ id: string; alias: string }>("POST", `/tags/${tagId}/aliases`, {
+      alias,
+    }),
 
   removeAlias: (aliasId: string) =>
     makeRequest<{ success: boolean }>("DELETE", `/tags/aliases/${aliasId}`),
@@ -187,22 +174,8 @@ export const tagApi = {
 };
 
 // ============================================================================
-// Resource API
+// Resource API Types
 // ============================================================================
-
-export interface TagInfo {
-  id: string;
-  name: string;
-  description?: string;
-  aliases: string[];
-}
-
-export enum ResourceStatus {
-  UNSPECIFIED = 0,
-  ACTIVE = 1,
-  STALE = 2,
-  DELETED = 3,
-}
 
 export interface ResourceTag {
   id: string;
@@ -218,7 +191,7 @@ export interface Resource {
   description?: string;
   url?: string;
   open_with?: string;
-  status: ResourceStatus;
+  status: number;
   created_at: string;
   updated_at: string;
   tags: ResourceTag[];
@@ -261,29 +234,9 @@ export interface ResourceListItem {
   title: string;
   description?: string;
   url?: string;
-  status: ResourceStatus;
+  status: number;
   created_at: string;
   tags: ResourceTag[];
-}
-
-export interface ListResourcesRequest {
-  tag_id?: string;
-  status?: ResourceStatus;
-  page?: number;
-  page_size?: number;
-}
-
-export interface ListResourcesResponse {
-  items: ResourceListItem[];
-  total: number;
-  page: number;
-  page_size: number;
-}
-
-export interface SearchResourcesRequest {
-  query: string;
-  page?: number;
-  page_size?: number;
 }
 
 export interface TagQuery {
@@ -305,19 +258,11 @@ export interface ResourceQueryRequest {
   sort_by?: string;
 }
 
-export interface ResourceQueryResponse {
-  items: ResourceSearchResult[];
-  total: number;
-  page: number;
-  page_size: number;
-}
-
-export enum MatchSource {
-  UNSPECIFIED = 0,
-  TITLE = 1,
-  DESCRIPTION = 2,
-  TAG = 3,
-  ALIAS = 4,
+export interface TagInfo {
+  id: string;
+  name: string;
+  description?: string;
+  aliases: string[];
 }
 
 export interface ResourceSearchResult {
@@ -332,7 +277,7 @@ export interface ResourceSearchResult {
   match_source: number;
 }
 
-export interface SearchResourcesResponse {
+export interface ResourceQueryResponse {
   items: ResourceSearchResult[];
   total: number;
   page: number;
@@ -348,15 +293,11 @@ export interface GetResourceResponse {
   url?: string;
   open_with?: string;
   metadata?: string;
-  status: ResourceStatus;
+  status: number;
   synced_at?: string;
   created_at: string;
   updated_at: string;
   tags: ResourceTag[];
-}
-
-export interface GetByUrlRequest {
-  url: string;
 }
 
 export interface GetByUrlResponse {
@@ -374,7 +315,7 @@ export const resourceApi = {
   update: (id: string, data: UpdateResourceRequest) =>
     makeRequest<UpdateResourceResponse>("PATCH", `/resources/${id}`, {
       ...data,
-      id: undefined, // Remove id from body
+      id: undefined,
     }),
 
   delete: (id: string) =>
@@ -382,18 +323,6 @@ export const resourceApi = {
 
   get: (id: string) =>
     makeRequest<GetResourceResponse>("GET", `/resources/${id}`),
-
-  list: (req?: ListResourcesRequest) => {
-    const params = new URLSearchParams();
-    if (req?.tag_id) params.append("tag_id", req.tag_id);
-    if (req?.status) params.append("status", req.status.toString());
-    params.append("page", (req?.page || 1).toString());
-    params.append("page_size", (req?.page_size || 10).toString());
-    return makeRequest<ListResourcesResponse>(
-      "GET",
-      `/resources?${params.toString()}`,
-    );
-  },
 
   query: (req: ResourceQueryRequest) =>
     makeRequest<ResourceQueryResponse>("POST", "/resources/query", {
