@@ -1,10 +1,11 @@
 ---
 name: IndexAll Assistant
 description: >
-  Manage and organize your resource collection using IndexAll. Use when indexing new materials,
-  organizing tags, searching resources, or maintaining your knowledge base. Provides guided
-  workflows for resource discovery, tag management, bulk operations, and taxonomy planning.
-  Works with the IndexAll MCP to query and structure your resources.
+  Manage and organize your resource collection using IndexAll. Use when: (1) user wants to know
+  what resources they have saved or bookmarked, (2) user needs to save, record, or index a new
+  resource (URL, article, tool, etc.), (3) organizing tags, searching resources, or maintaining
+  your knowledge base. Provides guided workflows for resource discovery, tag management, bulk
+  operations, and taxonomy planning. Works with the IndexAll MCP to query and structure your resources.
 ---
 
 # IndexAll Assistant
