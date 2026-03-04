@@ -383,16 +383,52 @@ export const resourceApi = {
   get: (id: string) =>
     makeRequest<GetResourceResponse>("GET", `/resources/${id}`),
 
-  list: (req?: ListResourcesRequest) => {
-    const params = new URLSearchParams();
-    if (req?.tag_id) params.append("tag_id", req.tag_id);
-    if (req?.status) params.append("status", req.status.toString());
-    params.append("page", (req?.page || 1).toString());
-    params.append("page_size", (req?.page_size || 10).toString());
-    return makeRequest<ListResourcesResponse>(
-      "GET",
-      `/resources?${params.toString()}`,
-    );
+  list: async (req?: ListResourcesRequest) => {
+    const queryRequest: ResourceQueryRequest = {
+      page: req?.page || 1,
+      page_size: req?.page_size || 20,
+    };
+
+    // If tag_id is provided, use TagQuery; otherwise use empty KeywordQuery to get all resources
+    if (req?.tag_id) {
+      queryRequest.tag_query = { tag_id: req.tag_id };
+    } else {
+      // Use empty keyword to match all resources (backend handles this)
+      queryRequest.keyword_query = { keyword: "" };
+    }
+
+    const response = await resourceApi.query(queryRequest);
+    // Convert ResourceSearchResult to ListResourcesResponse
+    // Note: SearchResult.tags are TagInfo (no color), while ListItem.tags are ResourceTag (with color)
+    // We map TagInfo to ResourceTag by omitting color (will be undefined)
+    return {
+      items: response.items.map((item) => ({
+        id: item.id,
+        source: item.source,
+        title: item.title,
+        description: item.description,
+        url: item.url,
+        status: 1 as const, // Default to ACTIVE
+        created_at: item.created_at,
+        tags: item.tags.map((tag) => ({
+          id: tag.id,
+          name: tag.name,
+        })) as any, // Cast to ResourceTag[] (TagInfo lacks color but is otherwise compatible)
+      })),
+      total: response.total,
+      page: response.page,
+      page_size: response.page_size,
+    } as ListResourcesResponse;
+  },
+
+  search: async (req: SearchResourcesRequest) => {
+    const response = await resourceApi.query({
+      keyword_query: { keyword: req.query },
+      page: req.page || 1,
+      page_size: req.page_size || 20,
+    });
+    // Return response directly - ResourceSearchResult matches SearchResourcesResponse
+    return response as SearchResourcesResponse;
   },
 
   query: (req: ResourceQueryRequest) =>
