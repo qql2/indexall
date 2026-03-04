@@ -32,6 +32,7 @@ Thumbs.db
 *.key
 *.log
 indexall.db
+/vault/
 
 # SQLite database files
 *.db
