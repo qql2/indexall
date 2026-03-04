@@ -291,17 +291,32 @@ export default function ResourceManagement({ searchQuery = '' }: { searchQuery?:
       setIsSearchMode(true);
       setLoading(true);
       setError(null);
-      resourceApi.search({
-        query: searchQuery,
-        page: 1,
-        page_size: 50,
-      }).then((response) => {
-        setResources(response.items as any);
-        setLoading(false);
-      }).catch((err) => {
-        setError(err instanceof Error ? err.message : 'Search failed');
-        setLoading(false);
-      });
+      resourceApi
+        .search({
+          query: searchQuery,
+          page: 1,
+          page_size: 50,
+        })
+        .then((response) => {
+          // Search returns ResourceSearchResult which has TagInfo in tags (no color)
+          // We need to map tags back to ResourceTag format for display
+          const items = response.items.map((item) => ({
+            id: item.id,
+            source: item.source,
+            title: item.title,
+            description: item.description,
+            url: item.url,
+            status: 1 as const, // Default to ACTIVE
+            created_at: item.created_at,
+            tags: item.tags as any, // TagInfo is compatible for display purposes
+          }));
+          setResources(items);
+          setLoading(false);
+        })
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : 'Search failed');
+          setLoading(false);
+        });
     } else {
       setIsSearchMode(false);
       loadResources(selectedFilterTag || undefined);

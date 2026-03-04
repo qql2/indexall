@@ -304,6 +304,27 @@ func (s *ResourceService) RemoveTag(ctx context.Context, req *indexallv1.RemoveT
 	}, nil
 }
 
+// listAllResources returns all active resources with pagination
+func (s *ResourceService) listAllResources(ctx context.Context, offset, limit int32) ([]gen.Resource, int64, error) {
+	// Get total count of all resources
+	total, err := s.q.CountResources(ctx, sql.NullString{Valid: false})
+	if err != nil {
+		return nil, 0, status.Errorf(codes.Internal, "failed to count resources: %v", err)
+	}
+
+	// List resources with pagination
+	resources, err := s.q.ListResources(ctx, gen.ListResourcesParams{
+		Status: sql.NullString{Valid: false}, // Get all statuses
+		Offset: int64(offset),
+		Limit:  int64(limit),
+	})
+	if err != nil {
+		return nil, 0, status.Errorf(codes.Internal, "failed to list resources: %v", err)
+	}
+
+	return resources, total, nil
+}
+
 func (s *ResourceService) Query(ctx context.Context, req *indexallv1.ResourceQueryRequest) (*indexallv1.ResourceQueryResponse, error) {
 	// Set defaults
 	page := req.Page
@@ -326,7 +347,8 @@ func (s *ResourceService) Query(ctx context.Context, req *indexallv1.ResourceQue
 	case *indexallv1.ResourceQueryRequest_KeywordQuery:
 		resources, total, err = s.queryByKeyword(ctx, queryType.KeywordQuery, offset, pageSize)
 	default:
-		return nil, status.Error(codes.InvalidArgument, "query is required")
+		// No query specified - return all resources with default pagination
+		resources, total, err = s.listAllResources(ctx, offset, pageSize)
 	}
 
 	if err != nil {
@@ -456,8 +478,9 @@ func (s *ResourceService) queryByTag(ctx context.Context, tq *indexallv1.TagQuer
 
 // queryByKeyword queries resources by keyword using LIKE (FTS5 fallback)
 func (s *ResourceService) queryByKeyword(ctx context.Context, kq *indexallv1.KeywordQuery, offset, limit int32) ([]gen.Resource, int64, error) {
+	// Empty keyword matches all resources
 	if kq.Keyword == "" {
-		return nil, 0, status.Error(codes.InvalidArgument, "keyword is required")
+		return s.listAllResources(ctx, offset, limit)
 	}
 
 	// Use LIKE for keyword matching (FTS5 fallback)
