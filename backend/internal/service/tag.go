@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -10,6 +11,7 @@ import (
 
 	indexallv1 "github.com/construct/indexall/api/indexall/v1"
 	"github.com/construct/indexall/internal/db/gen"
+	"github.com/construct/indexall/internal/vault"
 )
 
 // Ensure TagService implements TagServiceServer interface
@@ -19,10 +21,20 @@ type TagService struct {
 	indexallv1.UnimplementedTagServiceServer
 	db *sql.DB
 	q  *gen.Queries
+	v  *vault.Vault
 }
 
-func NewTagService(db *sql.DB, q *gen.Queries) *TagService {
-	return &TagService{db: db, q: q}
+func NewTagService(db *sql.DB, q *gen.Queries, v *vault.Vault) *TagService {
+	return &TagService{db: db, q: q, v: v}
+}
+
+func (s *TagService) logVault(op vault.OpType, entityType vault.EntityType, entityID string, data any) {
+	if s.v == nil {
+		return
+	}
+	if err := s.v.Append(op, entityType, entityID, data); err != nil {
+		fmt.Printf("vault append error: %v\n", err)
+	}
 }
 
 func (s *TagService) Create(ctx context.Context, req *indexallv1.CreateTagRequest) (*indexallv1.CreateTagResponse, error) {
@@ -81,6 +93,15 @@ func (s *TagService) Create(ctx context.Context, req *indexallv1.CreateTagReques
 		}
 	}
 
+	s.logVault(vault.OpCreate, vault.EntityTag, tagID, vault.TagData{
+		ID:        tagID,
+		Name:      tag.Name,
+		Color:     derefString(nullStringToPointer(tag.Color), ""),
+		Aliases:   req.Aliases,
+		Parents:   req.ParentIds,
+		CreatedAt: nullTimeToString(tag.CreatedAt),
+	})
+
 	resp := &indexallv1.CreateTagResponse{
 		Id:        tag.ID,
 		Name:      tag.Name,
@@ -133,6 +154,12 @@ func (s *TagService) Update(ctx context.Context, req *indexallv1.UpdateTagReques
 		return nil, status.Errorf(codes.Internal, "failed to update tag: %v", err)
 	}
 
+	s.logVault(vault.OpUpdate, vault.EntityTag, req.Id, vault.TagData{
+		ID:    req.Id,
+		Name:  updateName,
+		Color: derefString(req.Color, ""),
+	})
+
 	return &indexallv1.UpdateTagResponse{
 		Success: true,
 	}, nil
@@ -155,6 +182,8 @@ func (s *TagService) Delete(ctx context.Context, req *indexallv1.DeleteTagReques
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to delete tag: %v", err)
 	}
+
+	s.logVault(vault.OpDelete, vault.EntityTag, req.Id, nil)
 
 	return &indexallv1.DeleteTagResponse{
 		Success: true,
@@ -385,6 +414,12 @@ func (s *TagService) AddAlias(ctx context.Context, req *indexallv1.AddAliasReque
 		return nil, status.Errorf(codes.Internal, "failed to create alias: %v", err)
 	}
 
+	s.logVault(vault.OpCreate, vault.EntityTagAlias, aliasID, vault.TagAliasData{
+		ID:    aliasID,
+		TagID: req.TagId,
+		Alias: req.Alias,
+	})
+
 	return &indexallv1.AddAliasResponse{
 		Id:    aliasID,
 		Alias: req.Alias,
@@ -400,6 +435,8 @@ func (s *TagService) RemoveAlias(ctx context.Context, req *indexallv1.RemoveAlia
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to delete alias: %v", err)
 	}
+
+	s.logVault(vault.OpDelete, vault.EntityTagAlias, req.AliasId, vault.TagAliasData{ID: req.AliasId})
 
 	return &indexallv1.RemoveAliasResponse{
 		Success: true,
@@ -419,6 +456,11 @@ func (s *TagService) AddParent(ctx context.Context, req *indexallv1.AddParentReq
 		return nil, status.Errorf(codes.Internal, "failed to add parent relation: %v", err)
 	}
 
+	s.logVault(vault.OpCreate, vault.EntityTagRelation, req.ChildId, vault.TagRelationData{
+		ParentID: req.ParentId,
+		ChildID:  req.ChildId,
+	})
+
 	return &indexallv1.AddParentResponse{
 		Success: true,
 	}, nil
@@ -436,6 +478,11 @@ func (s *TagService) RemoveParent(ctx context.Context, req *indexallv1.RemovePar
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to remove parent relation: %v", err)
 	}
+
+	s.logVault(vault.OpDelete, vault.EntityTagRelation, req.ChildId, vault.TagRelationData{
+		ParentID: req.ParentId,
+		ChildID:  req.ChildId,
+	})
 
 	return &indexallv1.RemoveParentResponse{
 		Success: true,
