@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/go-kratos/kratos/v2"
@@ -15,6 +17,7 @@ import (
 	"github.com/construct/indexall/internal/db"
 	"github.com/construct/indexall/internal/server"
 	"github.com/construct/indexall/internal/service"
+	"github.com/construct/indexall/internal/vault"
 )
 
 // go build -ldflags "-X main.Version=x.y.z"
@@ -80,9 +83,25 @@ func main() {
 	// Get queries instance
 	queries := db.GetQueries(database)
 
+	// Initialize vault
+	vaultPath := os.Getenv("INDEXALL_VAULT_PATH")
+	if vaultPath == "" {
+		vaultPath = "./vault"
+	}
+	v, err := vault.New(vaultPath)
+	if err != nil {
+		panic(fmt.Errorf("failed to init vault: %w", err))
+	}
+
+	// Start vault watcher (syncs incoming changes from other devices)
+	watcher := vault.NewWatcher(v, database, queries)
+	if err := watcher.Start(context.Background()); err != nil {
+		fmt.Printf("vault watcher failed to start: %v\n", err)
+	}
+
 	// Create services
-	tagService := service.NewTagService(database, queries)
-	resourceService := service.NewResourceService(database, queries)
+	tagService := service.NewTagService(database, queries, v)
+	resourceService := service.NewResourceService(database, queries, v)
 
 	// Create gRPC and HTTP servers
 	gs := server.NewGRPCServer(bc.Server, tagService, resourceService, logger)

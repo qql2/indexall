@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"net/url"
 
 	"github.com/google/uuid"
@@ -11,6 +12,7 @@ import (
 
 	indexallv1 "github.com/construct/indexall/api/indexall/v1"
 	"github.com/construct/indexall/internal/db/gen"
+	"github.com/construct/indexall/internal/vault"
 )
 
 // Ensure ResourceService implements ResourceServiceServer interface
@@ -20,10 +22,20 @@ type ResourceService struct {
 	indexallv1.UnimplementedResourceServiceServer
 	db *sql.DB
 	q  *gen.Queries
+	v  *vault.Vault
 }
 
-func NewResourceService(db *sql.DB, q *gen.Queries) *ResourceService {
-	return &ResourceService{db: db, q: q}
+func NewResourceService(db *sql.DB, q *gen.Queries, v *vault.Vault) *ResourceService {
+	return &ResourceService{db: db, q: q, v: v}
+}
+
+func (s *ResourceService) logVault(op vault.OpType, entityType vault.EntityType, entityID string, data any) {
+	if s.v == nil {
+		return
+	}
+	if err := s.v.Append(op, entityType, entityID, data); err != nil {
+		fmt.Printf("vault append error: %v\n", err)
+	}
 }
 
 func (s *ResourceService) Create(ctx context.Context, req *indexallv1.CreateResourceRequest) (*indexallv1.CreateResourceResponse, error) {
@@ -91,6 +103,17 @@ func (s *ResourceService) Create(ctx context.Context, req *indexallv1.CreateReso
 		}
 	}
 
+	s.logVault(vault.OpCreate, vault.EntityResource, resourceID, vault.ResourceData{
+		ID:         resourceID,
+		Source:     source,
+		ExternalID: externalID.String,
+		Title:      resource.Title,
+		URL:        derefString(nullStringToPointer(resource.Url), ""),
+		Status:     "active",
+		Tags:       req.TagIds,
+		CreatedAt:  nullTimeToString(resource.CreatedAt),
+	})
+
 	resp := &indexallv1.CreateResourceResponse{
 		Id:        resource.ID,
 		Title:     resource.Title,
@@ -134,6 +157,14 @@ func (s *ResourceService) Update(ctx context.Context, req *indexallv1.UpdateReso
 		return nil, status.Errorf(codes.Internal, "failed to update resource: %v", err)
 	}
 
+	s.logVault(vault.OpUpdate, vault.EntityResource, req.Id, vault.ResourceData{
+		ID:          req.Id,
+		Title:       title,
+		Description: derefString(req.Description, ""),
+		URL:         derefString(req.Url, ""),
+		OpenWith:    derefString(req.OpenWith, ""),
+	})
+
 	return &indexallv1.UpdateResourceResponse{
 		Success: true,
 	}, nil
@@ -156,6 +187,8 @@ func (s *ResourceService) Delete(ctx context.Context, req *indexallv1.DeleteReso
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to delete resource: %v", err)
 	}
+
+	s.logVault(vault.OpDelete, vault.EntityResource, req.Id, nil)
 
 	return &indexallv1.DeleteResourceResponse{
 		Success: true,
@@ -273,6 +306,11 @@ func (s *ResourceService) AddTag(ctx context.Context, req *indexallv1.AddTagRequ
 		return nil, status.Errorf(codes.Internal, "failed to add tag: %v", err)
 	}
 
+	s.logVault(vault.OpCreate, vault.EntityResourceTag, req.ResourceId, vault.ResourceTagData{
+		ResourceID: req.ResourceId,
+		TagID:      req.TagId,
+	})
+
 	return &indexallv1.AddTagResponse{
 		Success: true,
 	}, nil
@@ -298,6 +336,11 @@ func (s *ResourceService) RemoveTag(ctx context.Context, req *indexallv1.RemoveT
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to remove tag: %v", err)
 	}
+
+	s.logVault(vault.OpDelete, vault.EntityResourceTag, req.ResourceId, vault.ResourceTagData{
+		ResourceID: req.ResourceId,
+		TagID:      req.TagId,
+	})
 
 	return &indexallv1.RemoveTagResponse{
 		Success: true,
