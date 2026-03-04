@@ -41,9 +41,9 @@ pnpm --filter @indexall/mcp build
 
 Output will be in `packages/mcp/dist/index.js`
 
-### 2. Configure Claude Desktop
+### 2. Configure Claude Code
 
-Add the MCP server to Claude Desktop's configuration at `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Add the MCP server to Claude Code's configuration at `~/.claude/mcp_config.json`:
 
 ```json
 {
@@ -61,6 +61,12 @@ Add the MCP server to Claude Desktop's configuration at `~/Library/Application S
 
 Replace `/path/to/indexall` with the actual path to your IndexAll repository.
 
+Or use the `/mcp add` command in Claude Code:
+
+```
+/mcp add indexall node /path/to/indexall/packages/mcp/dist/index.js INDEXALL_API_URL=http://localhost:8080
+```
+
 ### 3. Start IndexAll Backend
 
 ```bash
@@ -70,9 +76,9 @@ make run
 
 The backend will start on `http://localhost:8080` (default).
 
-### 4. Restart Claude Desktop
+### 4. Use IndexAll Tools in Claude Code
 
-After updating the configuration, restart Claude Desktop. The MCP server should now be available, and you can ask Claude about your resources.
+Once configured and the backend is running, you can use IndexAll tools directly in Claude Code. The MCP server will be automatically loaded, and all resource and tag management tools will be available for use.
 
 ## Usage Examples
 
