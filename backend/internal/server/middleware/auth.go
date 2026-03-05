@@ -14,7 +14,7 @@ func APIKeyAuth(apiKey string) middleware.Middleware {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
 			if tr, ok := transport.FromServerContext(ctx); ok {
 				auth := tr.RequestHeader().Get("Authorization")
-				if strings.TrimPrefix(auth, "Bearer ") != apiKey {
+				if !strings.HasPrefix(auth, "Bearer ") || auth[len("Bearer "):] != apiKey {
 					return nil, errors.Unauthorized("UNAUTHORIZED", "invalid api key")
 				}
 			}
