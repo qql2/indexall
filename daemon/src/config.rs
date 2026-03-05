@@ -21,6 +21,7 @@ fn default_http_port() -> u16 {
 pub struct WatchDir {
     pub path: String,
     pub recursive: bool,
+    #[serde(default)]
     pub auto_index_new: bool,
     pub ignore_patterns: Vec<String>,
 }
