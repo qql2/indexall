@@ -30,11 +30,11 @@ async fn index_handler(
     State(state): State<AppState>,
     Json(req): Json<IndexRequest>,
 ) -> Result<Json<IndexResponse>, (StatusCode, String)> {
-    let path = std::path::PathBuf::from(&req.path);
-
-    if !path.is_absolute() {
+    let raw = std::path::PathBuf::from(&req.path);
+    if !raw.is_absolute() {
         return Err((StatusCode::BAD_REQUEST, "Path must be absolute".to_string()));
     }
+    let path = dunce::canonicalize(&raw).unwrap_or(raw);
 
     let external_id = format!("{}:{}", state.machine_id, path.display());
     let title = path
