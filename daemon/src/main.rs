@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
         info!("  - {} (recursive: {})", dir.path, dir.recursive);
     }
 
-    let client = Arc::new(client::ApiClient::new(config.api_url));
+    let client = Arc::new(client::ApiClient::new(config.api_url, config.api_key));
 
     let mut handles = vec![];
 

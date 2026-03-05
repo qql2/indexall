@@ -12,14 +12,25 @@ fn path_to_file_url(path: &str) -> String {
 
 pub struct ApiClient {
     base_url: String,
+    api_key: Option<String>,
     client: Client,
 }
 
 impl ApiClient {
-    pub fn new(base_url: String) -> Self {
+    pub fn new(base_url: String, api_key: Option<String>) -> Self {
         ApiClient {
             base_url,
+            api_key,
             client: Client::new(),
+        }
+    }
+
+    fn request(&self, method: reqwest::Method, url: &str) -> reqwest::RequestBuilder {
+        let builder = self.client.request(method, url);
+        if let Some(key) = &self.api_key {
+            builder.header("Authorization", format!("Bearer {}", key))
+        } else {
+            builder
         }
     }
 
@@ -29,7 +40,7 @@ impl ApiClient {
             self.base_url,
             urlencoding::encode(external_id)
         );
-        let response = self.client.get(&url).send().await?;
+        let response = self.request(reqwest::Method::GET, &url).send().await?;
         if response.status().is_success() {
             let body: serde_json::Value = response.json().await?;
             Ok(body.get("id").and_then(|v| v.as_str()).map(|s| s.to_string()))
@@ -52,7 +63,7 @@ impl ApiClient {
             "external_id": external_id,
         });
 
-        let response = self.client.post(&url).json(&payload).send().await?;
+        let response = self.request(reqwest::Method::POST, &url).json(&payload).send().await?;
         let body: serde_json::Value = response.json().await?;
         let id = body
             .get("id")
@@ -81,8 +92,7 @@ impl ApiClient {
             payload.insert("title".to_string(), json!(title));
         }
 
-        self.client
-            .patch(&url)
+        self.request(reqwest::Method::PATCH, &url)
             .json(&serde_json::Value::Object(payload))
             .send()
             .await?;
@@ -92,7 +102,7 @@ impl ApiClient {
 
     pub async fn delete_resource(&self, id: &str) -> Result<()> {
         let url = format!("{}/v1/resources/{}", self.base_url, id);
-        self.client.delete(&url).send().await?;
+        self.request(reqwest::Method::DELETE, &url).send().await?;
         Ok(())
     }
 }
