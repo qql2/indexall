@@ -80,9 +80,10 @@
 - Connector 能力声明（稳定 ID、Webhook、变更列表、双向写回）
 - 同步状态展示（最后同步时间、同步日志）
 - 用户可配置同步策略（自动/手动、同步频率）
+- **即时更新索引**：当资源发生变化（移动、删除、重命名等）时，自动检测并同步更新索引
 
 ### 首批 Connector
-
+- 文件系统
 - GitHub（stars、repos）
 - Notion（pages、databases）
 - 浏览器书签批量导入（Chrome/Firefox HTML 导出）
