@@ -1,0 +1,23 @@
+[package]
+name = "indexall-daemon"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "indexall-daemon"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+notify = "6"
+notify-debouncer-mini = "0.4"
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+anyhow = "1"
+uuid = { version = "1", features = ["v4"] }
+dirs = "5"
+urlencoding = "2"

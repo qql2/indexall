@@ -747,6 +747,26 @@ func (q *Queries) UpdateResource(ctx context.Context, arg UpdateResourceParams) 
 	return err
 }
 
+const updateResourceExternalId = `-- name: UpdateResourceExternalId :exec
+UPDATE resources
+SET external_id = ?,
+    url = ?,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = ?
+`
+
+type UpdateResourceExternalIdParams struct {
+	ExternalID sql.NullString `db:"external_id" json:"external_id"`
+	Url        sql.NullString `db:"url" json:"url"`
+	ID         string         `db:"id" json:"id"`
+}
+
+// Used when a filesystem file is moved/renamed to update its tracking path
+func (q *Queries) UpdateResourceExternalId(ctx context.Context, arg UpdateResourceExternalIdParams) error {
+	_, err := q.db.ExecContext(ctx, updateResourceExternalId, arg.ExternalID, arg.Url, arg.ID)
+	return err
+}
+
 const updateSyncTime = `-- name: UpdateSyncTime :exec
 UPDATE resources
 SET synced_at = CURRENT_TIMESTAMP

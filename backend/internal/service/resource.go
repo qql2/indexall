@@ -146,6 +146,18 @@ func (s *ResourceService) Update(ctx context.Context, req *indexallv1.UpdateReso
 		title = *req.Title
 	}
 
+	// If external_id is being updated (file moved/renamed), use specialized query
+	if req.ExternalId != nil && *req.ExternalId != "" {
+		err = s.q.UpdateResourceExternalId(ctx, gen.UpdateResourceExternalIdParams{
+			ID:         req.Id,
+			ExternalID: sql.NullString{String: *req.ExternalId, Valid: true},
+			Url:        pointerToNullString(req.Url),
+		})
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to update resource external_id: %v", err)
+		}
+	}
+
 	err = s.q.UpdateResource(ctx, gen.UpdateResourceParams{
 		ID:          req.Id,
 		Title:       title,
@@ -274,6 +286,28 @@ func (s *ResourceService) GetByUrl(ctx context.Context, req *indexallv1.GetByUrl
 			Title: resourceRow.Title,
 			Tags: tags,
 		},
+	}, nil
+}
+
+func (s *ResourceService) GetByExternalId(ctx context.Context, req *indexallv1.GetByExternalIdRequest) (*indexallv1.GetByExternalIdResponse, error) {
+	if req.Source == "" || req.ExternalId == "" {
+		return nil, status.Error(codes.InvalidArgument, "source and external_id are required")
+	}
+
+	resource, err := s.q.GetResourceBySourceAndExternalId(ctx, gen.GetResourceBySourceAndExternalIdParams{
+		Source:     req.Source,
+		ExternalID: sql.NullString{String: req.ExternalId, Valid: true},
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return &indexallv1.GetByExternalIdResponse{}, nil
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get resource: %v", err)
+	}
+
+	return &indexallv1.GetByExternalIdResponse{
+		Id:    &resource.ID,
+		Title: &resource.Title,
 	}, nil
 }
 

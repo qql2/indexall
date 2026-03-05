@@ -19,14 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ResourceService_Create_FullMethodName    = "/indexall.v1.ResourceService/Create"
-	ResourceService_Update_FullMethodName    = "/indexall.v1.ResourceService/Update"
-	ResourceService_Delete_FullMethodName    = "/indexall.v1.ResourceService/Delete"
-	ResourceService_Get_FullMethodName       = "/indexall.v1.ResourceService/Get"
-	ResourceService_Query_FullMethodName     = "/indexall.v1.ResourceService/Query"
-	ResourceService_GetByUrl_FullMethodName  = "/indexall.v1.ResourceService/GetByUrl"
-	ResourceService_AddTag_FullMethodName    = "/indexall.v1.ResourceService/AddTag"
-	ResourceService_RemoveTag_FullMethodName = "/indexall.v1.ResourceService/RemoveTag"
+	ResourceService_Create_FullMethodName          = "/indexall.v1.ResourceService/Create"
+	ResourceService_Update_FullMethodName          = "/indexall.v1.ResourceService/Update"
+	ResourceService_Delete_FullMethodName          = "/indexall.v1.ResourceService/Delete"
+	ResourceService_Get_FullMethodName             = "/indexall.v1.ResourceService/Get"
+	ResourceService_Query_FullMethodName           = "/indexall.v1.ResourceService/Query"
+	ResourceService_GetByUrl_FullMethodName        = "/indexall.v1.ResourceService/GetByUrl"
+	ResourceService_GetByExternalId_FullMethodName = "/indexall.v1.ResourceService/GetByExternalId"
+	ResourceService_AddTag_FullMethodName          = "/indexall.v1.ResourceService/AddTag"
+	ResourceService_RemoveTag_FullMethodName       = "/indexall.v1.ResourceService/RemoveTag"
 )
 
 // ResourceServiceClient is the client API for ResourceService service.
@@ -39,6 +40,7 @@ type ResourceServiceClient interface {
 	Get(ctx context.Context, in *GetResourceRequest, opts ...grpc.CallOption) (*GetResourceResponse, error)
 	Query(ctx context.Context, in *ResourceQueryRequest, opts ...grpc.CallOption) (*ResourceQueryResponse, error)
 	GetByUrl(ctx context.Context, in *GetByUrlRequest, opts ...grpc.CallOption) (*GetByUrlResponse, error)
+	GetByExternalId(ctx context.Context, in *GetByExternalIdRequest, opts ...grpc.CallOption) (*GetByExternalIdResponse, error)
 	AddTag(ctx context.Context, in *AddTagRequest, opts ...grpc.CallOption) (*AddTagResponse, error)
 	RemoveTag(ctx context.Context, in *RemoveTagRequest, opts ...grpc.CallOption) (*RemoveTagResponse, error)
 }
@@ -111,6 +113,16 @@ func (c *resourceServiceClient) GetByUrl(ctx context.Context, in *GetByUrlReques
 	return out, nil
 }
 
+func (c *resourceServiceClient) GetByExternalId(ctx context.Context, in *GetByExternalIdRequest, opts ...grpc.CallOption) (*GetByExternalIdResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetByExternalIdResponse)
+	err := c.cc.Invoke(ctx, ResourceService_GetByExternalId_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *resourceServiceClient) AddTag(ctx context.Context, in *AddTagRequest, opts ...grpc.CallOption) (*AddTagResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AddTagResponse)
@@ -141,6 +153,7 @@ type ResourceServiceServer interface {
 	Get(context.Context, *GetResourceRequest) (*GetResourceResponse, error)
 	Query(context.Context, *ResourceQueryRequest) (*ResourceQueryResponse, error)
 	GetByUrl(context.Context, *GetByUrlRequest) (*GetByUrlResponse, error)
+	GetByExternalId(context.Context, *GetByExternalIdRequest) (*GetByExternalIdResponse, error)
 	AddTag(context.Context, *AddTagRequest) (*AddTagResponse, error)
 	RemoveTag(context.Context, *RemoveTagRequest) (*RemoveTagResponse, error)
 	mustEmbedUnimplementedResourceServiceServer()
@@ -170,6 +183,9 @@ func (UnimplementedResourceServiceServer) Query(context.Context, *ResourceQueryR
 }
 func (UnimplementedResourceServiceServer) GetByUrl(context.Context, *GetByUrlRequest) (*GetByUrlResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetByUrl not implemented")
+}
+func (UnimplementedResourceServiceServer) GetByExternalId(context.Context, *GetByExternalIdRequest) (*GetByExternalIdResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetByExternalId not implemented")
 }
 func (UnimplementedResourceServiceServer) AddTag(context.Context, *AddTagRequest) (*AddTagResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AddTag not implemented")
@@ -306,6 +322,24 @@ func _ResourceService_GetByUrl_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ResourceService_GetByExternalId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetByExternalIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceServiceServer).GetByExternalId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ResourceService_GetByExternalId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceServiceServer).GetByExternalId(ctx, req.(*GetByExternalIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ResourceService_AddTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddTagRequest)
 	if err := dec(in); err != nil {
@@ -372,6 +406,10 @@ var ResourceService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetByUrl",
 			Handler:    _ResourceService_GetByUrl_Handler,
+		},
+		{
+			MethodName: "GetByExternalId",
+			Handler:    _ResourceService_GetByExternalId_Handler,
 		},
 		{
 			MethodName: "AddTag",

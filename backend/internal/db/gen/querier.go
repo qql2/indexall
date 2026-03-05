@@ -72,6 +72,8 @@ type Querier interface {
 	// Search tags by name or alias (prefix match)
 	SearchTags(ctx context.Context, arg SearchTagsParams) ([]SearchTagsRow, error)
 	UpdateResource(ctx context.Context, arg UpdateResourceParams) error
+	// Used when a filesystem file is moved/renamed to update its tracking path
+	UpdateResourceExternalId(ctx context.Context, arg UpdateResourceExternalIdParams) error
 	UpdateSyncTime(ctx context.Context, id string) error
 	UpdateTag(ctx context.Context, arg UpdateTagParams) error
 }

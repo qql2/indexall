@@ -61,6 +61,17 @@ message UpdateResourceRequest {
   optional string description = 3;
   optional string url = 4;
   optional string open_with = 5;
+  optional string external_id = 6; // Used by filesystem connector when file is moved/renamed
+}
+
+message GetByExternalIdRequest {
+  string source = 1;
+  string external_id = 2;
+}
+
+message GetByExternalIdResponse {
+  optional string id = 1;
+  optional string title = 2;
 }
 
 message UpdateResourceResponse {
@@ -270,6 +281,11 @@ service ResourceService {
   rpc GetByUrl(GetByUrlRequest) returns (GetByUrlResponse) {
     option (google.api.http) = {
       get: "/v1/resources/by-url"
+    };
+  };
+  rpc GetByExternalId(GetByExternalIdRequest) returns (GetByExternalIdResponse) {
+    option (google.api.http) = {
+      get: "/v1/resources/by-external-id"
     };
   };
   rpc AddTag(AddTagRequest) returns (AddTagResponse) {
