@@ -122,7 +122,7 @@ impl FSWatcher {
             if self.should_ignore(path) {
                 continue;
             }
-            let abs_path = path.canonicalize().unwrap_or_else(|_| path.clone());
+            let abs_path = dunce::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
             let external_id = format!("{}:{}", self.machine_id, abs_path.display());
             let kind_str = format!("{:?}", event.kind);
             let file_exists = abs_path.is_file();

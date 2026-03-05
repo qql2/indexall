@@ -22,3 +22,4 @@ uuid = { version = "1", features = ["v4"] }
 dirs = "5"
 urlencoding = "2"
 axum = "0.7"
+dunce = "1"

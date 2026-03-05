@@ -2,6 +2,14 @@ use anyhow::Result;
 use reqwest::Client;
 use serde_json::json;
 
+fn path_to_file_url(path: &str) -> String {
+    if cfg!(windows) {
+        format!("file:///{}", path.replace('\\', "/"))
+    } else {
+        path_to_file_url(path)
+    }
+}
+
 pub struct ApiClient {
     base_url: String,
     client: Client,
@@ -39,7 +47,7 @@ impl ApiClient {
         let url = format!("{}/v1/resources", self.base_url);
         let payload = json!({
             "title": title,
-            "url": format!("file://{}", path),
+            "url": path_to_file_url(path),
             "source": "filesystem",
             "external_id": external_id,
         });
@@ -64,7 +72,7 @@ impl ApiClient {
         let mut payload = serde_json::Map::new();
 
         if let Some(path) = new_path {
-            payload.insert("url".to_string(), json!(format!("file://{}", path)));
+            payload.insert("url".to_string(), json!(path_to_file_url(path)));
         }
         if let Some(ext_id) = new_external_id {
             payload.insert("external_id".to_string(), json!(ext_id));
