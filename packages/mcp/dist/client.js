@@ -3,13 +3,18 @@
  * Calls the gRPC-Gateway HTTP endpoints on the backend
  */
 const API_BASE_URL = process.env.INDEXALL_API_URL || "http://localhost:8080";
+const API_KEY = process.env.INDEXALL_API_KEY || "";
 async function makeRequest(method, path, body) {
     const url = `${API_BASE_URL}/v1${path}`;
+    const headers = {
+        "Content-Type": "application/json",
+    };
+    if (API_KEY) {
+        headers["Authorization"] = `Bearer ${API_KEY}`;
+    }
     const options = {
         method,
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers,
     };
     if (body) {
         options.body = JSON.stringify(body);

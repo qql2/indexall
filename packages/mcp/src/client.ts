@@ -4,6 +4,7 @@
  */
 
 const API_BASE_URL = process.env.INDEXALL_API_URL || "http://localhost:8080";
+const API_KEY = process.env.INDEXALL_API_KEY || "";
 
 export interface ApiError {
   code: string;
@@ -17,11 +18,16 @@ async function makeRequest<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}/v1${path}`;
 
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (API_KEY) {
+    headers["Authorization"] = `Bearer ${API_KEY}`;
+  }
+
   const options: RequestInit = {
     method,
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
   };
 
   if (body) {
