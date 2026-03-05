@@ -1,0 +1,17 @@
+services:
+  indexall:
+    build: ./backend
+    command: ["./server", "-conf", "configs/config.docker.yaml"]
+    environment:
+      - INDEXALL_API_KEY=${INDEXALL_API_KEY}
+      - INDEXALL_VAULT_PATH=/app/vault
+    volumes:
+      - indexall_data:/data
+      - indexall_vault:/app/vault
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  indexall_data:
+  indexall_vault:
