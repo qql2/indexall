@@ -1,5 +1,5 @@
 ---
-name: IndexAll Assistant
+name: indexall-mcp
 description: >
   Manage and organize your resource collection using IndexAll. Use when: (1) user wants to know
   what resources they have saved or bookmarked, (2) user needs to save, record, or index a new
