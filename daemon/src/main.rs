@@ -1,5 +1,6 @@
 mod client;
 mod config;
+mod server;
 mod watcher;
 
 use anyhow::Result;
@@ -33,6 +34,18 @@ async fn main() -> Result<()> {
     let client = Arc::new(client::ApiClient::new(config.api_url));
 
     let mut handles = vec![];
+
+    let server_state = server::AppState {
+        client: Arc::clone(&client),
+        machine_id: config.machine_id.clone(),
+    };
+    let http_port = config.http_port;
+    handles.push(tokio::spawn(async move {
+        if let Err(e) = server::start(http_port, server_state).await {
+            tracing::error!("HTTP server error: {}", e);
+        }
+    }));
+
     for watch_dir in config.watch_dirs {
         let client = Arc::clone(&client);
         let machine_id = config.machine_id.clone();

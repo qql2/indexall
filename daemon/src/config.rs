@@ -9,6 +9,12 @@ pub struct Config {
     pub api_url: String,
     pub machine_id: String,
     pub watch_dirs: Vec<WatchDir>,
+    #[serde(default = "default_http_port")]
+    pub http_port: u16,
+}
+
+fn default_http_port() -> u16 {
+    47832
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,6 +51,7 @@ impl Config {
             api_url: "http://localhost:8080".to_string(),
             machine_id: Uuid::new_v4().to_string(),
             watch_dirs: vec![],
+            http_port: default_http_port(),
         })
     }
 

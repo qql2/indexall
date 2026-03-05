@@ -16,6 +16,7 @@ import { ListToolsRequestSchema, CallToolRequestSchema, } from "@modelcontextpro
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { resourceTools, handleResourceTools } from "./tools/resources.js";
 import { tagTools, handleTagTools } from "./tools/tags.js";
+import { connectorTools, handleConnectorTools } from "./tools/connectors.js";
 // ============================================================================
 // Server Setup
 // ============================================================================
@@ -28,7 +29,7 @@ const server = new Server({
     },
 });
 // Combine all tools
-const allTools = [...tagTools, ...resourceTools];
+const allTools = [...tagTools, ...resourceTools, ...connectorTools];
 // ============================================================================
 // Request Handlers
 // ============================================================================
@@ -47,6 +48,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         else if (resourceTools.some((t) => t.name === toolName)) {
             result = await handleResourceTools(toolName, toolInput);
+        }
+        else if (connectorTools.some((t) => t.name === toolName)) {
+            result = await handleConnectorTools(toolName, toolInput);
         }
         else {
             throw new Error(`Unknown tool: ${toolName}`);
