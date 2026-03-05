@@ -3,6 +3,7 @@ module github.com/construct/indexall
 go 1.24.0
 
 require (
+	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-kratos/kratos/v2 v2.8.3
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.7.0
@@ -14,7 +15,6 @@ require (
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
-	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-kratos/aegis v0.2.0 // indirect
 	github.com/go-playground/form/v4 v4.2.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect

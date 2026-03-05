@@ -46,10 +46,10 @@ func RegisterResourceServiceHTTPServer(s *http.Server, srv ResourceServiceHTTPSe
 	r.POST("/v1/resources", _ResourceService_Create1_HTTP_Handler(srv))
 	r.PATCH("/v1/resources/{id}", _ResourceService_Update1_HTTP_Handler(srv))
 	r.DELETE("/v1/resources/{id}", _ResourceService_Delete1_HTTP_Handler(srv))
-	r.GET("/v1/resources/{id}", _ResourceService_Get0_HTTP_Handler(srv))
 	r.POST("/v1/resources/query", _ResourceService_Query0_HTTP_Handler(srv))
 	r.GET("/v1/resources/by-url", _ResourceService_GetByUrl0_HTTP_Handler(srv))
 	r.GET("/v1/resources/by-external-id", _ResourceService_GetByExternalId0_HTTP_Handler(srv))
+	r.GET("/v1/resources/{id}", _ResourceService_Get0_HTTP_Handler(srv))
 	r.POST("/v1/resources/{resource_id}/tags", _ResourceService_AddTag0_HTTP_Handler(srv))
 	r.DELETE("/v1/resources/{resource_id}/tags/{tag_id}", _ResourceService_RemoveTag0_HTTP_Handler(srv))
 }
@@ -123,28 +123,6 @@ func _ResourceService_Delete1_HTTP_Handler(srv ResourceServiceHTTPServer) func(c
 	}
 }
 
-func _ResourceService_Get0_HTTP_Handler(srv ResourceServiceHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in GetResourceRequest
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		if err := ctx.BindVars(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationResourceServiceGet)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.Get(ctx, req.(*GetResourceRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*GetResourceResponse)
-		return ctx.Result(200, reply)
-	}
-}
-
 func _ResourceService_Query0_HTTP_Handler(srv ResourceServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in ResourceQueryRequest
@@ -201,6 +179,28 @@ func _ResourceService_GetByExternalId0_HTTP_Handler(srv ResourceServiceHTTPServe
 			return err
 		}
 		reply := out.(*GetByExternalIdResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _ResourceService_Get0_HTTP_Handler(srv ResourceServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetResourceRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationResourceServiceGet)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.Get(ctx, req.(*GetResourceRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetResourceResponse)
 		return ctx.Result(200, reply)
 	}
 }

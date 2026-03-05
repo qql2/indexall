@@ -267,11 +267,6 @@ service ResourceService {
       delete: "/v1/resources/{id}"
     };
   };
-  rpc Get(GetResourceRequest) returns (GetResourceResponse) {
-    option (google.api.http) = {
-      get: "/v1/resources/{id}"
-    };
-  };
   rpc Query(ResourceQueryRequest) returns (ResourceQueryResponse) {
     option (google.api.http) = {
       post: "/v1/resources/query"
@@ -286,6 +281,11 @@ service ResourceService {
   rpc GetByExternalId(GetByExternalIdRequest) returns (GetByExternalIdResponse) {
     option (google.api.http) = {
       get: "/v1/resources/by-external-id"
+    };
+  };
+  rpc Get(GetResourceRequest) returns (GetResourceResponse) {
+    option (google.api.http) = {
+      get: "/v1/resources/{id}"
     };
   };
   rpc AddTag(AddTagRequest) returns (AddTagResponse) {

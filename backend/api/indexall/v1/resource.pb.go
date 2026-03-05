@@ -2544,11 +2544,11 @@ const file_indexall_v1_resource_proto_rawDesc = "" +
 	"\x0fResourceService\x12k\n" +
 	"\x06Create\x12\".indexall.v1.CreateResourceRequest\x1a#.indexall.v1.CreateResourceResponse\"\x18\x82\xd3\xe4\x93\x02\x12:\x01*\"\r/v1/resources\x12p\n" +
 	"\x06Update\x12\".indexall.v1.UpdateResourceRequest\x1a#.indexall.v1.UpdateResourceResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*2\x12/v1/resources/{id}\x12m\n" +
-	"\x06Delete\x12\".indexall.v1.DeleteResourceRequest\x1a#.indexall.v1.DeleteResourceResponse\"\x1a\x82\xd3\xe4\x93\x02\x14*\x12/v1/resources/{id}\x12d\n" +
-	"\x03Get\x12\x1f.indexall.v1.GetResourceRequest\x1a .indexall.v1.GetResourceResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/v1/resources/{id}\x12n\n" +
+	"\x06Delete\x12\".indexall.v1.DeleteResourceRequest\x1a#.indexall.v1.DeleteResourceResponse\"\x1a\x82\xd3\xe4\x93\x02\x14*\x12/v1/resources/{id}\x12n\n" +
 	"\x05Query\x12!.indexall.v1.ResourceQueryRequest\x1a\".indexall.v1.ResourceQueryResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/resources/query\x12e\n" +
 	"\bGetByUrl\x12\x1c.indexall.v1.GetByUrlRequest\x1a\x1d.indexall.v1.GetByUrlResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/resources/by-url\x12\x82\x01\n" +
-	"\x0fGetByExternalId\x12#.indexall.v1.GetByExternalIdRequest\x1a$.indexall.v1.GetByExternalIdResponse\"$\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/resources/by-external-id\x12n\n" +
+	"\x0fGetByExternalId\x12#.indexall.v1.GetByExternalIdRequest\x1a$.indexall.v1.GetByExternalIdResponse\"$\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/resources/by-external-id\x12d\n" +
+	"\x03Get\x12\x1f.indexall.v1.GetResourceRequest\x1a .indexall.v1.GetResourceResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/v1/resources/{id}\x12n\n" +
 	"\x06AddTag\x12\x1a.indexall.v1.AddTagRequest\x1a\x1b.indexall.v1.AddTagResponse\"+\x82\xd3\xe4\x93\x02%:\x01*\" /v1/resources/{resource_id}/tags\x12}\n" +
 	"\tRemoveTag\x12\x1d.indexall.v1.RemoveTagRequest\x1a\x1e.indexall.v1.RemoveTagResponse\"1\x82\xd3\xe4\x93\x02+*)/v1/resources/{resource_id}/tags/{tag_id}BFZDgithub.com/construct/indexall/internal/gen/pb/indexall/v1;indexallv1b\x06proto3"
 
@@ -2627,19 +2627,19 @@ var file_indexall_v1_resource_proto_depIdxs = []int32{
 	7,  // 20: indexall.v1.ResourceService.Create:input_type -> indexall.v1.CreateResourceRequest
 	9,  // 21: indexall.v1.ResourceService.Update:input_type -> indexall.v1.UpdateResourceRequest
 	13, // 22: indexall.v1.ResourceService.Delete:input_type -> indexall.v1.DeleteResourceRequest
-	15, // 23: indexall.v1.ResourceService.Get:input_type -> indexall.v1.GetResourceRequest
-	28, // 24: indexall.v1.ResourceService.Query:input_type -> indexall.v1.ResourceQueryRequest
-	23, // 25: indexall.v1.ResourceService.GetByUrl:input_type -> indexall.v1.GetByUrlRequest
-	10, // 26: indexall.v1.ResourceService.GetByExternalId:input_type -> indexall.v1.GetByExternalIdRequest
+	28, // 23: indexall.v1.ResourceService.Query:input_type -> indexall.v1.ResourceQueryRequest
+	23, // 24: indexall.v1.ResourceService.GetByUrl:input_type -> indexall.v1.GetByUrlRequest
+	10, // 25: indexall.v1.ResourceService.GetByExternalId:input_type -> indexall.v1.GetByExternalIdRequest
+	15, // 26: indexall.v1.ResourceService.Get:input_type -> indexall.v1.GetResourceRequest
 	30, // 27: indexall.v1.ResourceService.AddTag:input_type -> indexall.v1.AddTagRequest
 	32, // 28: indexall.v1.ResourceService.RemoveTag:input_type -> indexall.v1.RemoveTagRequest
 	8,  // 29: indexall.v1.ResourceService.Create:output_type -> indexall.v1.CreateResourceResponse
 	12, // 30: indexall.v1.ResourceService.Update:output_type -> indexall.v1.UpdateResourceResponse
 	14, // 31: indexall.v1.ResourceService.Delete:output_type -> indexall.v1.DeleteResourceResponse
-	16, // 32: indexall.v1.ResourceService.Get:output_type -> indexall.v1.GetResourceResponse
-	29, // 33: indexall.v1.ResourceService.Query:output_type -> indexall.v1.ResourceQueryResponse
-	24, // 34: indexall.v1.ResourceService.GetByUrl:output_type -> indexall.v1.GetByUrlResponse
-	11, // 35: indexall.v1.ResourceService.GetByExternalId:output_type -> indexall.v1.GetByExternalIdResponse
+	29, // 32: indexall.v1.ResourceService.Query:output_type -> indexall.v1.ResourceQueryResponse
+	24, // 33: indexall.v1.ResourceService.GetByUrl:output_type -> indexall.v1.GetByUrlResponse
+	11, // 34: indexall.v1.ResourceService.GetByExternalId:output_type -> indexall.v1.GetByExternalIdResponse
+	16, // 35: indexall.v1.ResourceService.Get:output_type -> indexall.v1.GetResourceResponse
 	31, // 36: indexall.v1.ResourceService.AddTag:output_type -> indexall.v1.AddTagResponse
 	33, // 37: indexall.v1.ResourceService.RemoveTag:output_type -> indexall.v1.RemoveTagResponse
 	29, // [29:38] is the sub-list for method output_type

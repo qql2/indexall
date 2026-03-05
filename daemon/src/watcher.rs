@@ -6,15 +6,25 @@ use notify_debouncer_mini::new_debouncer;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant, SystemTime};
+use std::time::{Duration, Instant, UNIX_EPOCH};
 use tracing::{error, info, warn};
 
 const PENDING_MOVE_TIMEOUT: Duration = Duration::from_secs(2);
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+// Use raw integers to avoid SystemTime's Hash inconsistency on macOS
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct FileMeta {
     size: u64,
-    mtime: SystemTime,
+    mtime_secs: u64,
+    mtime_nanos: u32,
+}
+
+impl FileMeta {
+    fn from_metadata(meta: &std::fs::Metadata) -> Option<Self> {
+        let mtime = meta.modified().ok()?;
+        let dur = mtime.duration_since(UNIX_EPOCH).ok()?;
+        Some(FileMeta { size: meta.len(), mtime_secs: dur.as_secs(), mtime_nanos: dur.subsec_nanos() })
+    }
 }
 
 pub struct FSWatcher {
@@ -43,7 +53,7 @@ impl FSWatcher {
         self.scan_directory(Path::new(&self.watch_dir.path), self.watch_dir.recursive);
 
         let (tx, mut rx) = tokio::sync::mpsc::channel(100);
-        let mut debouncer = new_debouncer(Duration::from_millis(500), move |event| {
+        let mut debouncer = new_debouncer(Duration::from_millis(500), move |event: notify_debouncer_mini::DebounceEventResult| {
             let _ = tx.blocking_send(event);
         })?;
 
@@ -86,11 +96,8 @@ impl FSWatcher {
 
     fn cache_file_meta(&self, path: &Path) {
         if let Ok(meta) = std::fs::metadata(path) {
-            if let Ok(mtime) = meta.modified() {
-                self.file_cache
-                    .lock()
-                    .unwrap()
-                    .insert(path.to_path_buf(), FileMeta { size: meta.len(), mtime });
+            if let Some(file_meta) = FileMeta::from_metadata(&meta) {
+                self.file_cache.lock().unwrap().insert(path.to_path_buf(), file_meta);
             }
         }
     }
@@ -104,6 +111,12 @@ impl FSWatcher {
             return Ok(());
         };
 
+        // Two-pass: process removes first to populate pending_moves,
+        // then process upserts so they can match against pending_moves.
+        // This is necessary because macOS FSEvents emits Create before Remove in a batch.
+        let mut removes: Vec<(PathBuf, String)> = vec![];
+        let mut upserts: Vec<(PathBuf, String)> = vec![];
+
         for event in events {
             let path = &event.path;
             if self.should_ignore(path) {
@@ -112,21 +125,24 @@ impl FSWatcher {
             let abs_path = path.canonicalize().unwrap_or_else(|_| path.clone());
             let external_id = format!("{}:{}", self.machine_id, abs_path.display());
             let kind_str = format!("{:?}", event.kind);
+            let file_exists = abs_path.is_file();
 
-            if kind_str.contains("Remove") || kind_str.contains("Name(From)") {
-                self.handle_remove(path, &external_id).await?;
-            } else if kind_str.contains("Create") || kind_str.contains("Name(To)") {
-                self.handle_create(&abs_path, &external_id).await?;
-            } else if kind_str.contains("Name(Any)") {
-                // Platform-ambiguous rename: check existence to decide direction
-                if abs_path.is_file() {
-                    self.handle_create(&abs_path, &external_id).await?;
-                } else {
-                    self.handle_remove(path, &external_id).await?;
-                }
+            if kind_str.contains("Remove") || kind_str.contains("Name(From)")
+                || ((kind_str == "Any" || kind_str.contains("Name(Any)")) && !file_exists)
+            {
+                removes.push((path.clone(), external_id));
+            } else if file_exists {
+                upserts.push((abs_path, external_id));
             } else if kind_str.contains("Modify") {
                 self.handle_modify(&abs_path, &external_id).await?;
             }
+        }
+
+        for (path, external_id) in removes {
+            self.handle_remove(&path, &external_id).await?;
+        }
+        for (abs_path, external_id) in upserts {
+            self.handle_upsert(&abs_path, &external_id).await?;
         }
         Ok(())
     }
@@ -152,48 +168,44 @@ impl FSWatcher {
         }
     }
 
-    async fn handle_create(&self, path: &Path, external_id: &str) -> Result<()> {
+    async fn handle_upsert(&self, path: &Path, external_id: &str) -> Result<()> {
         if !path.is_file() {
             return Ok(());
         }
         self.cache_file_meta(path);
 
-        // Try to match a pending Remove by size+mtime → file was moved
+        // 1. Check pending_moves by size+mtime → detect file move
         if let Ok(meta) = std::fs::metadata(path) {
-            if let Ok(mtime) = meta.modified() {
-                let file_meta = FileMeta { size: meta.len(), mtime };
+            if let Some(file_meta) = FileMeta::from_metadata(&meta) {
                 let pending = self.pending_moves.lock().unwrap().remove(&file_meta);
 
                 if let Some((old_external_id, _)) = pending {
                     match self.client.get_by_external_id(&old_external_id).await? {
                         Some(id) => {
-                            let title = path
-                                .file_name()
-                                .and_then(|n| n.to_str())
-                                .unwrap_or("unknown");
-                            match self
-                                .client
-                                .update_resource(&id, path.to_str(), Some(external_id), Some(title))
-                                .await
-                            {
-                                Ok(_) => info!(
-                                    "Moved resource: {} → {}",
-                                    old_external_id, external_id
-                                ),
+                            let title = path.file_name().and_then(|n| n.to_str()).unwrap_or("unknown");
+                            match self.client.update_resource(&id, path.to_str(), Some(external_id), Some(title)).await {
+                                Ok(_) => info!("Moved resource: {} → {}", old_external_id, external_id),
                                 Err(e) => error!("Failed to update moved resource: {}", e),
                             }
                         }
-                        None => {
-                            // Old resource not in index, just create normally
-                            self.create_if_auto_index(path, external_id).await;
-                        }
+                        None => self.create_if_auto_index(path, external_id).await,
                     }
                     return Ok(());
                 }
-            }
+        }
         }
 
-        self.create_if_auto_index(path, external_id).await;
+        // 2. Not a move: update if indexed, create if new
+        let title = path.file_name().and_then(|n| n.to_str()).unwrap_or("unknown");
+        match self.client.get_by_external_id(external_id).await? {
+            Some(id) => {
+                match self.client.update_resource(&id, path.to_str(), None, Some(title)).await {
+                    Ok(_) => info!("Updated resource: {}", external_id),
+                    Err(e) => error!("Failed to update resource: {}", e),
+                }
+            }
+            None => self.create_if_auto_index(path, external_id).await,
+        }
         Ok(())
     }
 
