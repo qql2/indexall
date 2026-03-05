@@ -23,6 +23,7 @@ const OperationResourceServiceAddTag = "/indexall.v1.ResourceService/AddTag"
 const OperationResourceServiceCreate = "/indexall.v1.ResourceService/Create"
 const OperationResourceServiceDelete = "/indexall.v1.ResourceService/Delete"
 const OperationResourceServiceGet = "/indexall.v1.ResourceService/Get"
+const OperationResourceServiceGetByExternalId = "/indexall.v1.ResourceService/GetByExternalId"
 const OperationResourceServiceGetByUrl = "/indexall.v1.ResourceService/GetByUrl"
 const OperationResourceServiceQuery = "/indexall.v1.ResourceService/Query"
 const OperationResourceServiceRemoveTag = "/indexall.v1.ResourceService/RemoveTag"
@@ -33,6 +34,7 @@ type ResourceServiceHTTPServer interface {
 	Create(context.Context, *CreateResourceRequest) (*CreateResourceResponse, error)
 	Delete(context.Context, *DeleteResourceRequest) (*DeleteResourceResponse, error)
 	Get(context.Context, *GetResourceRequest) (*GetResourceResponse, error)
+	GetByExternalId(context.Context, *GetByExternalIdRequest) (*GetByExternalIdResponse, error)
 	GetByUrl(context.Context, *GetByUrlRequest) (*GetByUrlResponse, error)
 	Query(context.Context, *ResourceQueryRequest) (*ResourceQueryResponse, error)
 	RemoveTag(context.Context, *RemoveTagRequest) (*RemoveTagResponse, error)
@@ -44,9 +46,10 @@ func RegisterResourceServiceHTTPServer(s *http.Server, srv ResourceServiceHTTPSe
 	r.POST("/v1/resources", _ResourceService_Create1_HTTP_Handler(srv))
 	r.PATCH("/v1/resources/{id}", _ResourceService_Update1_HTTP_Handler(srv))
 	r.DELETE("/v1/resources/{id}", _ResourceService_Delete1_HTTP_Handler(srv))
-	r.GET("/v1/resources/{id}", _ResourceService_Get0_HTTP_Handler(srv))
 	r.POST("/v1/resources/query", _ResourceService_Query0_HTTP_Handler(srv))
 	r.GET("/v1/resources/by-url", _ResourceService_GetByUrl0_HTTP_Handler(srv))
+	r.GET("/v1/resources/by-external-id", _ResourceService_GetByExternalId0_HTTP_Handler(srv))
+	r.GET("/v1/resources/{id}", _ResourceService_Get0_HTTP_Handler(srv))
 	r.POST("/v1/resources/{resource_id}/tags", _ResourceService_AddTag0_HTTP_Handler(srv))
 	r.DELETE("/v1/resources/{resource_id}/tags/{tag_id}", _ResourceService_RemoveTag0_HTTP_Handler(srv))
 }
@@ -120,28 +123,6 @@ func _ResourceService_Delete1_HTTP_Handler(srv ResourceServiceHTTPServer) func(c
 	}
 }
 
-func _ResourceService_Get0_HTTP_Handler(srv ResourceServiceHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in GetResourceRequest
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		if err := ctx.BindVars(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationResourceServiceGet)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.Get(ctx, req.(*GetResourceRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*GetResourceResponse)
-		return ctx.Result(200, reply)
-	}
-}
-
 func _ResourceService_Query0_HTTP_Handler(srv ResourceServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in ResourceQueryRequest
@@ -179,6 +160,47 @@ func _ResourceService_GetByUrl0_HTTP_Handler(srv ResourceServiceHTTPServer) func
 			return err
 		}
 		reply := out.(*GetByUrlResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _ResourceService_GetByExternalId0_HTTP_Handler(srv ResourceServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetByExternalIdRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationResourceServiceGetByExternalId)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetByExternalId(ctx, req.(*GetByExternalIdRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetByExternalIdResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _ResourceService_Get0_HTTP_Handler(srv ResourceServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetResourceRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationResourceServiceGet)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.Get(ctx, req.(*GetResourceRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetResourceResponse)
 		return ctx.Result(200, reply)
 	}
 }
@@ -235,6 +257,7 @@ type ResourceServiceHTTPClient interface {
 	Create(ctx context.Context, req *CreateResourceRequest, opts ...http.CallOption) (rsp *CreateResourceResponse, err error)
 	Delete(ctx context.Context, req *DeleteResourceRequest, opts ...http.CallOption) (rsp *DeleteResourceResponse, err error)
 	Get(ctx context.Context, req *GetResourceRequest, opts ...http.CallOption) (rsp *GetResourceResponse, err error)
+	GetByExternalId(ctx context.Context, req *GetByExternalIdRequest, opts ...http.CallOption) (rsp *GetByExternalIdResponse, err error)
 	GetByUrl(ctx context.Context, req *GetByUrlRequest, opts ...http.CallOption) (rsp *GetByUrlResponse, err error)
 	Query(ctx context.Context, req *ResourceQueryRequest, opts ...http.CallOption) (rsp *ResourceQueryResponse, err error)
 	RemoveTag(ctx context.Context, req *RemoveTagRequest, opts ...http.CallOption) (rsp *RemoveTagResponse, err error)
@@ -293,6 +316,19 @@ func (c *ResourceServiceHTTPClientImpl) Get(ctx context.Context, in *GetResource
 	pattern := "/v1/resources/{id}"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationResourceServiceGet))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *ResourceServiceHTTPClientImpl) GetByExternalId(ctx context.Context, in *GetByExternalIdRequest, opts ...http.CallOption) (*GetByExternalIdResponse, error) {
+	var out GetByExternalIdResponse
+	pattern := "/v1/resources/by-external-id"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationResourceServiceGetByExternalId))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {

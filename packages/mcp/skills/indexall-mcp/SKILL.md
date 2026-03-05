@@ -1,5 +1,5 @@
 ---
-name: IndexAll Assistant
+name: indexall-mcp
 description: >
   Manage and organize your resource collection using IndexAll. Use when: (1) user wants to know
   what resources they have saved or bookmarked, (2) user needs to save, record, or index a new
@@ -37,9 +37,13 @@ Structured workflows for managing your resource library through IndexAll.
 
 **Steps**:
 1. **List existing resources** in the topic area using `query_resources` with tag scope
-2. **Create resource** for each new item (title, URL, description)
+2. **Create resource** (see tool selection below)
 3. **Assign tags** by calling `add_tag_to_resource`
 4. **Verify** by searching to confirm discoverability
+
+**Tool selection by resource type**:
+- **Local file** (`/Users/...`, `/home/...`): use `index_local_file(path)` — NOT `create_resource`. The filesystem connector (daemon) manages these with a specific format; using `create_resource` directly breaks move/deletion tracking.
+- **Web URL, GitHub repo, Notion page, etc.**: use `create_resource` with title, url, source, description.
 
 **Best for**: Importing from bookmarks, adding research materials, building collections
 

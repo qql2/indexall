@@ -176,7 +176,7 @@ func (x TagQuery_TagScope) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TagQuery_TagScope.Descriptor instead.
 func (TagQuery_TagScope) EnumDescriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{19, 0}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{21, 0}
 }
 
 type KeywordQuery_FieldScope int32
@@ -225,7 +225,7 @@ func (x KeywordQuery_FieldScope) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use KeywordQuery_FieldScope.Descriptor instead.
 func (KeywordQuery_FieldScope) EnumDescriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{20, 0}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{22, 0}
 }
 
 type KeywordQuery_TagScope int32
@@ -274,7 +274,7 @@ func (x KeywordQuery_TagScope) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use KeywordQuery_TagScope.Descriptor instead.
 func (KeywordQuery_TagScope) EnumDescriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{20, 1}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{22, 1}
 }
 
 // ResourceTag represents a tag associated with a resource
@@ -646,6 +646,7 @@ type UpdateResourceRequest struct {
 	Description   *string                `protobuf:"bytes,3,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	Url           *string                `protobuf:"bytes,4,opt,name=url,proto3,oneof" json:"url,omitempty"`
 	OpenWith      *string                `protobuf:"bytes,5,opt,name=open_with,json=openWith,proto3,oneof" json:"open_with,omitempty"`
+	ExternalId    *string                `protobuf:"bytes,6,opt,name=external_id,json=externalId,proto3,oneof" json:"external_id,omitempty"` // Used by filesystem connector when file is moved/renamed
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -715,6 +716,117 @@ func (x *UpdateResourceRequest) GetOpenWith() string {
 	return ""
 }
 
+func (x *UpdateResourceRequest) GetExternalId() string {
+	if x != nil && x.ExternalId != nil {
+		return *x.ExternalId
+	}
+	return ""
+}
+
+type GetByExternalIdRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Source        string                 `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
+	ExternalId    string                 `protobuf:"bytes,2,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetByExternalIdRequest) Reset() {
+	*x = GetByExternalIdRequest{}
+	mi := &file_indexall_v1_resource_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetByExternalIdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetByExternalIdRequest) ProtoMessage() {}
+
+func (x *GetByExternalIdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_indexall_v1_resource_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetByExternalIdRequest.ProtoReflect.Descriptor instead.
+func (*GetByExternalIdRequest) Descriptor() ([]byte, []int) {
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GetByExternalIdRequest) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+func (x *GetByExternalIdRequest) GetExternalId() string {
+	if x != nil {
+		return x.ExternalId
+	}
+	return ""
+}
+
+type GetByExternalIdResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            *string                `protobuf:"bytes,1,opt,name=id,proto3,oneof" json:"id,omitempty"`
+	Title         *string                `protobuf:"bytes,2,opt,name=title,proto3,oneof" json:"title,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetByExternalIdResponse) Reset() {
+	*x = GetByExternalIdResponse{}
+	mi := &file_indexall_v1_resource_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetByExternalIdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetByExternalIdResponse) ProtoMessage() {}
+
+func (x *GetByExternalIdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_indexall_v1_resource_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetByExternalIdResponse.ProtoReflect.Descriptor instead.
+func (*GetByExternalIdResponse) Descriptor() ([]byte, []int) {
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *GetByExternalIdResponse) GetId() string {
+	if x != nil && x.Id != nil {
+		return *x.Id
+	}
+	return ""
+}
+
+func (x *GetByExternalIdResponse) GetTitle() string {
+	if x != nil && x.Title != nil {
+		return *x.Title
+	}
+	return ""
+}
+
 type UpdateResourceResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
@@ -724,7 +836,7 @@ type UpdateResourceResponse struct {
 
 func (x *UpdateResourceResponse) Reset() {
 	*x = UpdateResourceResponse{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[5]
+	mi := &file_indexall_v1_resource_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -736,7 +848,7 @@ func (x *UpdateResourceResponse) String() string {
 func (*UpdateResourceResponse) ProtoMessage() {}
 
 func (x *UpdateResourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[5]
+	mi := &file_indexall_v1_resource_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -749,7 +861,7 @@ func (x *UpdateResourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateResourceResponse.ProtoReflect.Descriptor instead.
 func (*UpdateResourceResponse) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{5}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *UpdateResourceResponse) GetSuccess() bool {
@@ -768,7 +880,7 @@ type DeleteResourceRequest struct {
 
 func (x *DeleteResourceRequest) Reset() {
 	*x = DeleteResourceRequest{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[6]
+	mi := &file_indexall_v1_resource_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -780,7 +892,7 @@ func (x *DeleteResourceRequest) String() string {
 func (*DeleteResourceRequest) ProtoMessage() {}
 
 func (x *DeleteResourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[6]
+	mi := &file_indexall_v1_resource_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -793,7 +905,7 @@ func (x *DeleteResourceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteResourceRequest.ProtoReflect.Descriptor instead.
 func (*DeleteResourceRequest) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{6}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DeleteResourceRequest) GetId() string {
@@ -812,7 +924,7 @@ type DeleteResourceResponse struct {
 
 func (x *DeleteResourceResponse) Reset() {
 	*x = DeleteResourceResponse{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[7]
+	mi := &file_indexall_v1_resource_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -824,7 +936,7 @@ func (x *DeleteResourceResponse) String() string {
 func (*DeleteResourceResponse) ProtoMessage() {}
 
 func (x *DeleteResourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[7]
+	mi := &file_indexall_v1_resource_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -837,7 +949,7 @@ func (x *DeleteResourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteResourceResponse.ProtoReflect.Descriptor instead.
 func (*DeleteResourceResponse) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{7}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *DeleteResourceResponse) GetSuccess() bool {
@@ -856,7 +968,7 @@ type GetResourceRequest struct {
 
 func (x *GetResourceRequest) Reset() {
 	*x = GetResourceRequest{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[8]
+	mi := &file_indexall_v1_resource_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -868,7 +980,7 @@ func (x *GetResourceRequest) String() string {
 func (*GetResourceRequest) ProtoMessage() {}
 
 func (x *GetResourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[8]
+	mi := &file_indexall_v1_resource_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -881,7 +993,7 @@ func (x *GetResourceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetResourceRequest.ProtoReflect.Descriptor instead.
 func (*GetResourceRequest) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{8}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetResourceRequest) GetId() string {
@@ -912,7 +1024,7 @@ type GetResourceResponse struct {
 
 func (x *GetResourceResponse) Reset() {
 	*x = GetResourceResponse{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[9]
+	mi := &file_indexall_v1_resource_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -924,7 +1036,7 @@ func (x *GetResourceResponse) String() string {
 func (*GetResourceResponse) ProtoMessage() {}
 
 func (x *GetResourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[9]
+	mi := &file_indexall_v1_resource_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -937,7 +1049,7 @@ func (x *GetResourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetResourceResponse.ProtoReflect.Descriptor instead.
 func (*GetResourceResponse) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{9}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetResourceResponse) GetId() string {
@@ -1043,7 +1155,7 @@ type ListResourcesRequest struct {
 
 func (x *ListResourcesRequest) Reset() {
 	*x = ListResourcesRequest{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[10]
+	mi := &file_indexall_v1_resource_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1055,7 +1167,7 @@ func (x *ListResourcesRequest) String() string {
 func (*ListResourcesRequest) ProtoMessage() {}
 
 func (x *ListResourcesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[10]
+	mi := &file_indexall_v1_resource_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1068,7 +1180,7 @@ func (x *ListResourcesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListResourcesRequest.ProtoReflect.Descriptor instead.
 func (*ListResourcesRequest) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{10}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ListResourcesRequest) GetTagId() string {
@@ -1111,7 +1223,7 @@ type ListResourcesResponse struct {
 
 func (x *ListResourcesResponse) Reset() {
 	*x = ListResourcesResponse{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[11]
+	mi := &file_indexall_v1_resource_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1123,7 +1235,7 @@ func (x *ListResourcesResponse) String() string {
 func (*ListResourcesResponse) ProtoMessage() {}
 
 func (x *ListResourcesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[11]
+	mi := &file_indexall_v1_resource_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1136,7 +1248,7 @@ func (x *ListResourcesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListResourcesResponse.ProtoReflect.Descriptor instead.
 func (*ListResourcesResponse) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{11}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ListResourcesResponse) GetItems() []*ResourceListItem {
@@ -1183,7 +1295,7 @@ type ResourceListItem struct {
 
 func (x *ResourceListItem) Reset() {
 	*x = ResourceListItem{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[12]
+	mi := &file_indexall_v1_resource_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1195,7 +1307,7 @@ func (x *ResourceListItem) String() string {
 func (*ResourceListItem) ProtoMessage() {}
 
 func (x *ResourceListItem) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[12]
+	mi := &file_indexall_v1_resource_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1208,7 +1320,7 @@ func (x *ResourceListItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceListItem.ProtoReflect.Descriptor instead.
 func (*ResourceListItem) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{12}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ResourceListItem) GetId() string {
@@ -1278,7 +1390,7 @@ type SearchResourcesRequest struct {
 
 func (x *SearchResourcesRequest) Reset() {
 	*x = SearchResourcesRequest{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[13]
+	mi := &file_indexall_v1_resource_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1290,7 +1402,7 @@ func (x *SearchResourcesRequest) String() string {
 func (*SearchResourcesRequest) ProtoMessage() {}
 
 func (x *SearchResourcesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[13]
+	mi := &file_indexall_v1_resource_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1303,7 +1415,7 @@ func (x *SearchResourcesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchResourcesRequest.ProtoReflect.Descriptor instead.
 func (*SearchResourcesRequest) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{13}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *SearchResourcesRequest) GetQuery() string {
@@ -1339,7 +1451,7 @@ type SearchResourcesResponse struct {
 
 func (x *SearchResourcesResponse) Reset() {
 	*x = SearchResourcesResponse{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[14]
+	mi := &file_indexall_v1_resource_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1351,7 +1463,7 @@ func (x *SearchResourcesResponse) String() string {
 func (*SearchResourcesResponse) ProtoMessage() {}
 
 func (x *SearchResourcesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[14]
+	mi := &file_indexall_v1_resource_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1364,7 +1476,7 @@ func (x *SearchResourcesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchResourcesResponse.ProtoReflect.Descriptor instead.
 func (*SearchResourcesResponse) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{14}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *SearchResourcesResponse) GetItems() []*ResourceSearchResult {
@@ -1412,7 +1524,7 @@ type ResourceSearchResult struct {
 
 func (x *ResourceSearchResult) Reset() {
 	*x = ResourceSearchResult{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[15]
+	mi := &file_indexall_v1_resource_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1424,7 +1536,7 @@ func (x *ResourceSearchResult) String() string {
 func (*ResourceSearchResult) ProtoMessage() {}
 
 func (x *ResourceSearchResult) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[15]
+	mi := &file_indexall_v1_resource_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1437,7 +1549,7 @@ func (x *ResourceSearchResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceSearchResult.ProtoReflect.Descriptor instead.
 func (*ResourceSearchResult) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{15}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ResourceSearchResult) GetId() string {
@@ -1512,7 +1624,7 @@ type GetByUrlRequest struct {
 
 func (x *GetByUrlRequest) Reset() {
 	*x = GetByUrlRequest{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[16]
+	mi := &file_indexall_v1_resource_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1524,7 +1636,7 @@ func (x *GetByUrlRequest) String() string {
 func (*GetByUrlRequest) ProtoMessage() {}
 
 func (x *GetByUrlRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[16]
+	mi := &file_indexall_v1_resource_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1537,7 +1649,7 @@ func (x *GetByUrlRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetByUrlRequest.ProtoReflect.Descriptor instead.
 func (*GetByUrlRequest) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{16}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GetByUrlRequest) GetUrl() string {
@@ -1556,7 +1668,7 @@ type GetByUrlResponse struct {
 
 func (x *GetByUrlResponse) Reset() {
 	*x = GetByUrlResponse{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[17]
+	mi := &file_indexall_v1_resource_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1568,7 +1680,7 @@ func (x *GetByUrlResponse) String() string {
 func (*GetByUrlResponse) ProtoMessage() {}
 
 func (x *GetByUrlResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[17]
+	mi := &file_indexall_v1_resource_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1581,7 +1693,7 @@ func (x *GetByUrlResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetByUrlResponse.ProtoReflect.Descriptor instead.
 func (*GetByUrlResponse) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{17}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetByUrlResponse) GetResource() *GetByUrlResponse_Resource {
@@ -1603,7 +1715,7 @@ type TagInfo struct {
 
 func (x *TagInfo) Reset() {
 	*x = TagInfo{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[18]
+	mi := &file_indexall_v1_resource_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1615,7 +1727,7 @@ func (x *TagInfo) String() string {
 func (*TagInfo) ProtoMessage() {}
 
 func (x *TagInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[18]
+	mi := &file_indexall_v1_resource_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1628,7 +1740,7 @@ func (x *TagInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TagInfo.ProtoReflect.Descriptor instead.
 func (*TagInfo) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{18}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *TagInfo) GetId() string {
@@ -1669,7 +1781,7 @@ type TagQuery struct {
 
 func (x *TagQuery) Reset() {
 	*x = TagQuery{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[19]
+	mi := &file_indexall_v1_resource_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1681,7 +1793,7 @@ func (x *TagQuery) String() string {
 func (*TagQuery) ProtoMessage() {}
 
 func (x *TagQuery) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[19]
+	mi := &file_indexall_v1_resource_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1694,7 +1806,7 @@ func (x *TagQuery) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TagQuery.ProtoReflect.Descriptor instead.
 func (*TagQuery) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{19}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *TagQuery) GetTagId() string {
@@ -1722,7 +1834,7 @@ type KeywordQuery struct {
 
 func (x *KeywordQuery) Reset() {
 	*x = KeywordQuery{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[20]
+	mi := &file_indexall_v1_resource_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1734,7 +1846,7 @@ func (x *KeywordQuery) String() string {
 func (*KeywordQuery) ProtoMessage() {}
 
 func (x *KeywordQuery) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[20]
+	mi := &file_indexall_v1_resource_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1747,7 +1859,7 @@ func (x *KeywordQuery) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeywordQuery.ProtoReflect.Descriptor instead.
 func (*KeywordQuery) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{20}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *KeywordQuery) GetKeyword() string {
@@ -1787,7 +1899,7 @@ type ResourceQueryRequest struct {
 
 func (x *ResourceQueryRequest) Reset() {
 	*x = ResourceQueryRequest{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[21]
+	mi := &file_indexall_v1_resource_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1799,7 +1911,7 @@ func (x *ResourceQueryRequest) String() string {
 func (*ResourceQueryRequest) ProtoMessage() {}
 
 func (x *ResourceQueryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[21]
+	mi := &file_indexall_v1_resource_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1812,7 +1924,7 @@ func (x *ResourceQueryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceQueryRequest.ProtoReflect.Descriptor instead.
 func (*ResourceQueryRequest) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{21}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ResourceQueryRequest) GetQuery() isResourceQueryRequest_Query {
@@ -1889,7 +2001,7 @@ type ResourceQueryResponse struct {
 
 func (x *ResourceQueryResponse) Reset() {
 	*x = ResourceQueryResponse{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[22]
+	mi := &file_indexall_v1_resource_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1901,7 +2013,7 @@ func (x *ResourceQueryResponse) String() string {
 func (*ResourceQueryResponse) ProtoMessage() {}
 
 func (x *ResourceQueryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[22]
+	mi := &file_indexall_v1_resource_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1914,7 +2026,7 @@ func (x *ResourceQueryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceQueryResponse.ProtoReflect.Descriptor instead.
 func (*ResourceQueryResponse) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{22}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *ResourceQueryResponse) GetItems() []*ResourceSearchResult {
@@ -1955,7 +2067,7 @@ type AddTagRequest struct {
 
 func (x *AddTagRequest) Reset() {
 	*x = AddTagRequest{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[23]
+	mi := &file_indexall_v1_resource_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1967,7 +2079,7 @@ func (x *AddTagRequest) String() string {
 func (*AddTagRequest) ProtoMessage() {}
 
 func (x *AddTagRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[23]
+	mi := &file_indexall_v1_resource_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1980,7 +2092,7 @@ func (x *AddTagRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddTagRequest.ProtoReflect.Descriptor instead.
 func (*AddTagRequest) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{23}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *AddTagRequest) GetResourceId() string {
@@ -2006,7 +2118,7 @@ type AddTagResponse struct {
 
 func (x *AddTagResponse) Reset() {
 	*x = AddTagResponse{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[24]
+	mi := &file_indexall_v1_resource_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2018,7 +2130,7 @@ func (x *AddTagResponse) String() string {
 func (*AddTagResponse) ProtoMessage() {}
 
 func (x *AddTagResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[24]
+	mi := &file_indexall_v1_resource_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2031,7 +2143,7 @@ func (x *AddTagResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddTagResponse.ProtoReflect.Descriptor instead.
 func (*AddTagResponse) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{24}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *AddTagResponse) GetSuccess() bool {
@@ -2051,7 +2163,7 @@ type RemoveTagRequest struct {
 
 func (x *RemoveTagRequest) Reset() {
 	*x = RemoveTagRequest{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[25]
+	mi := &file_indexall_v1_resource_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2063,7 +2175,7 @@ func (x *RemoveTagRequest) String() string {
 func (*RemoveTagRequest) ProtoMessage() {}
 
 func (x *RemoveTagRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[25]
+	mi := &file_indexall_v1_resource_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2076,7 +2188,7 @@ func (x *RemoveTagRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveTagRequest.ProtoReflect.Descriptor instead.
 func (*RemoveTagRequest) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{25}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *RemoveTagRequest) GetResourceId() string {
@@ -2102,7 +2214,7 @@ type RemoveTagResponse struct {
 
 func (x *RemoveTagResponse) Reset() {
 	*x = RemoveTagResponse{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[26]
+	mi := &file_indexall_v1_resource_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2114,7 +2226,7 @@ func (x *RemoveTagResponse) String() string {
 func (*RemoveTagResponse) ProtoMessage() {}
 
 func (x *RemoveTagResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[26]
+	mi := &file_indexall_v1_resource_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2127,7 +2239,7 @@ func (x *RemoveTagResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveTagResponse.ProtoReflect.Descriptor instead.
 func (*RemoveTagResponse) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{26}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *RemoveTagResponse) GetSuccess() bool {
@@ -2148,7 +2260,7 @@ type GetByUrlResponse_Resource struct {
 
 func (x *GetByUrlResponse_Resource) Reset() {
 	*x = GetByUrlResponse_Resource{}
-	mi := &file_indexall_v1_resource_proto_msgTypes[27]
+	mi := &file_indexall_v1_resource_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2160,7 +2272,7 @@ func (x *GetByUrlResponse_Resource) String() string {
 func (*GetByUrlResponse_Resource) ProtoMessage() {}
 
 func (x *GetByUrlResponse_Resource) ProtoReflect() protoreflect.Message {
-	mi := &file_indexall_v1_resource_proto_msgTypes[27]
+	mi := &file_indexall_v1_resource_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2173,7 +2285,7 @@ func (x *GetByUrlResponse_Resource) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetByUrlResponse_Resource.ProtoReflect.Descriptor instead.
 func (*GetByUrlResponse_Resource) Descriptor() ([]byte, []int) {
-	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{17, 0}
+	return file_indexall_v1_resource_proto_rawDescGZIP(), []int{19, 0}
 }
 
 func (x *GetByUrlResponse_Resource) GetId() string {
@@ -2251,18 +2363,30 @@ const file_indexall_v1_resource_proto_rawDesc = "" +
 	"\x04tags\x18\x05 \x03(\v2\x18.indexall.v1.ResourceTagR\x04tags\x12\x1d\n" +
 	"\n" +
 	"created_at\x18\x06 \x01(\tR\tcreatedAtB\x06\n" +
-	"\x04_url\"\xd2\x01\n" +
+	"\x04_url\"\x88\x02\n" +
 	"\x15UpdateResourceRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
 	"\x05title\x18\x02 \x01(\tH\x00R\x05title\x88\x01\x01\x12%\n" +
 	"\vdescription\x18\x03 \x01(\tH\x01R\vdescription\x88\x01\x01\x12\x15\n" +
 	"\x03url\x18\x04 \x01(\tH\x02R\x03url\x88\x01\x01\x12 \n" +
-	"\topen_with\x18\x05 \x01(\tH\x03R\bopenWith\x88\x01\x01B\b\n" +
+	"\topen_with\x18\x05 \x01(\tH\x03R\bopenWith\x88\x01\x01\x12$\n" +
+	"\vexternal_id\x18\x06 \x01(\tH\x04R\n" +
+	"externalId\x88\x01\x01B\b\n" +
 	"\x06_titleB\x0e\n" +
 	"\f_descriptionB\x06\n" +
 	"\x04_urlB\f\n" +
 	"\n" +
-	"_open_with\"2\n" +
+	"_open_withB\x0e\n" +
+	"\f_external_id\"Q\n" +
+	"\x16GetByExternalIdRequest\x12\x16\n" +
+	"\x06source\x18\x01 \x01(\tR\x06source\x12\x1f\n" +
+	"\vexternal_id\x18\x02 \x01(\tR\n" +
+	"externalId\"Z\n" +
+	"\x17GetByExternalIdResponse\x12\x13\n" +
+	"\x02id\x18\x01 \x01(\tH\x00R\x02id\x88\x01\x01\x12\x19\n" +
+	"\x05title\x18\x02 \x01(\tH\x01R\x05title\x88\x01\x01B\x05\n" +
+	"\x03_idB\b\n" +
+	"\x06_title\"2\n" +
 	"\x16UpdateResourceResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"'\n" +
 	"\x15DeleteResourceRequest\x12\x0e\n" +
@@ -2416,14 +2540,15 @@ const file_indexall_v1_resource_proto_rawDesc = "" +
 	"\x12MATCH_SOURCE_TITLE\x10\x01\x12\x1c\n" +
 	"\x18MATCH_SOURCE_DESCRIPTION\x10\x02\x12\x14\n" +
 	"\x10MATCH_SOURCE_TAG\x10\x03\x12\x16\n" +
-	"\x12MATCH_SOURCE_ALIAS\x10\x042\x8b\a\n" +
+	"\x12MATCH_SOURCE_ALIAS\x10\x042\x90\b\n" +
 	"\x0fResourceService\x12k\n" +
 	"\x06Create\x12\".indexall.v1.CreateResourceRequest\x1a#.indexall.v1.CreateResourceResponse\"\x18\x82\xd3\xe4\x93\x02\x12:\x01*\"\r/v1/resources\x12p\n" +
 	"\x06Update\x12\".indexall.v1.UpdateResourceRequest\x1a#.indexall.v1.UpdateResourceResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*2\x12/v1/resources/{id}\x12m\n" +
-	"\x06Delete\x12\".indexall.v1.DeleteResourceRequest\x1a#.indexall.v1.DeleteResourceResponse\"\x1a\x82\xd3\xe4\x93\x02\x14*\x12/v1/resources/{id}\x12d\n" +
-	"\x03Get\x12\x1f.indexall.v1.GetResourceRequest\x1a .indexall.v1.GetResourceResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/v1/resources/{id}\x12n\n" +
+	"\x06Delete\x12\".indexall.v1.DeleteResourceRequest\x1a#.indexall.v1.DeleteResourceResponse\"\x1a\x82\xd3\xe4\x93\x02\x14*\x12/v1/resources/{id}\x12n\n" +
 	"\x05Query\x12!.indexall.v1.ResourceQueryRequest\x1a\".indexall.v1.ResourceQueryResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/resources/query\x12e\n" +
-	"\bGetByUrl\x12\x1c.indexall.v1.GetByUrlRequest\x1a\x1d.indexall.v1.GetByUrlResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/resources/by-url\x12n\n" +
+	"\bGetByUrl\x12\x1c.indexall.v1.GetByUrlRequest\x1a\x1d.indexall.v1.GetByUrlResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/resources/by-url\x12\x82\x01\n" +
+	"\x0fGetByExternalId\x12#.indexall.v1.GetByExternalIdRequest\x1a$.indexall.v1.GetByExternalIdResponse\"$\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/resources/by-external-id\x12d\n" +
+	"\x03Get\x12\x1f.indexall.v1.GetResourceRequest\x1a .indexall.v1.GetResourceResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/v1/resources/{id}\x12n\n" +
 	"\x06AddTag\x12\x1a.indexall.v1.AddTagRequest\x1a\x1b.indexall.v1.AddTagResponse\"+\x82\xd3\xe4\x93\x02%:\x01*\" /v1/resources/{resource_id}/tags\x12}\n" +
 	"\tRemoveTag\x12\x1d.indexall.v1.RemoveTagRequest\x1a\x1e.indexall.v1.RemoveTagResponse\"1\x82\xd3\xe4\x93\x02+*)/v1/resources/{resource_id}/tags/{tag_id}BFZDgithub.com/construct/indexall/internal/gen/pb/indexall/v1;indexallv1b\x06proto3"
 
@@ -2440,7 +2565,7 @@ func file_indexall_v1_resource_proto_rawDescGZIP() []byte {
 }
 
 var file_indexall_v1_resource_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_indexall_v1_resource_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_indexall_v1_resource_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
 var file_indexall_v1_resource_proto_goTypes = []any{
 	(ResourceStatus)(0),               // 0: indexall.v1.ResourceStatus
 	(MatchSource)(0),                  // 1: indexall.v1.MatchSource
@@ -2452,29 +2577,31 @@ var file_indexall_v1_resource_proto_goTypes = []any{
 	(*CreateResourceRequest)(nil),     // 7: indexall.v1.CreateResourceRequest
 	(*CreateResourceResponse)(nil),    // 8: indexall.v1.CreateResourceResponse
 	(*UpdateResourceRequest)(nil),     // 9: indexall.v1.UpdateResourceRequest
-	(*UpdateResourceResponse)(nil),    // 10: indexall.v1.UpdateResourceResponse
-	(*DeleteResourceRequest)(nil),     // 11: indexall.v1.DeleteResourceRequest
-	(*DeleteResourceResponse)(nil),    // 12: indexall.v1.DeleteResourceResponse
-	(*GetResourceRequest)(nil),        // 13: indexall.v1.GetResourceRequest
-	(*GetResourceResponse)(nil),       // 14: indexall.v1.GetResourceResponse
-	(*ListResourcesRequest)(nil),      // 15: indexall.v1.ListResourcesRequest
-	(*ListResourcesResponse)(nil),     // 16: indexall.v1.ListResourcesResponse
-	(*ResourceListItem)(nil),          // 17: indexall.v1.ResourceListItem
-	(*SearchResourcesRequest)(nil),    // 18: indexall.v1.SearchResourcesRequest
-	(*SearchResourcesResponse)(nil),   // 19: indexall.v1.SearchResourcesResponse
-	(*ResourceSearchResult)(nil),      // 20: indexall.v1.ResourceSearchResult
-	(*GetByUrlRequest)(nil),           // 21: indexall.v1.GetByUrlRequest
-	(*GetByUrlResponse)(nil),          // 22: indexall.v1.GetByUrlResponse
-	(*TagInfo)(nil),                   // 23: indexall.v1.TagInfo
-	(*TagQuery)(nil),                  // 24: indexall.v1.TagQuery
-	(*KeywordQuery)(nil),              // 25: indexall.v1.KeywordQuery
-	(*ResourceQueryRequest)(nil),      // 26: indexall.v1.ResourceQueryRequest
-	(*ResourceQueryResponse)(nil),     // 27: indexall.v1.ResourceQueryResponse
-	(*AddTagRequest)(nil),             // 28: indexall.v1.AddTagRequest
-	(*AddTagResponse)(nil),            // 29: indexall.v1.AddTagResponse
-	(*RemoveTagRequest)(nil),          // 30: indexall.v1.RemoveTagRequest
-	(*RemoveTagResponse)(nil),         // 31: indexall.v1.RemoveTagResponse
-	(*GetByUrlResponse_Resource)(nil), // 32: indexall.v1.GetByUrlResponse.Resource
+	(*GetByExternalIdRequest)(nil),    // 10: indexall.v1.GetByExternalIdRequest
+	(*GetByExternalIdResponse)(nil),   // 11: indexall.v1.GetByExternalIdResponse
+	(*UpdateResourceResponse)(nil),    // 12: indexall.v1.UpdateResourceResponse
+	(*DeleteResourceRequest)(nil),     // 13: indexall.v1.DeleteResourceRequest
+	(*DeleteResourceResponse)(nil),    // 14: indexall.v1.DeleteResourceResponse
+	(*GetResourceRequest)(nil),        // 15: indexall.v1.GetResourceRequest
+	(*GetResourceResponse)(nil),       // 16: indexall.v1.GetResourceResponse
+	(*ListResourcesRequest)(nil),      // 17: indexall.v1.ListResourcesRequest
+	(*ListResourcesResponse)(nil),     // 18: indexall.v1.ListResourcesResponse
+	(*ResourceListItem)(nil),          // 19: indexall.v1.ResourceListItem
+	(*SearchResourcesRequest)(nil),    // 20: indexall.v1.SearchResourcesRequest
+	(*SearchResourcesResponse)(nil),   // 21: indexall.v1.SearchResourcesResponse
+	(*ResourceSearchResult)(nil),      // 22: indexall.v1.ResourceSearchResult
+	(*GetByUrlRequest)(nil),           // 23: indexall.v1.GetByUrlRequest
+	(*GetByUrlResponse)(nil),          // 24: indexall.v1.GetByUrlResponse
+	(*TagInfo)(nil),                   // 25: indexall.v1.TagInfo
+	(*TagQuery)(nil),                  // 26: indexall.v1.TagQuery
+	(*KeywordQuery)(nil),              // 27: indexall.v1.KeywordQuery
+	(*ResourceQueryRequest)(nil),      // 28: indexall.v1.ResourceQueryRequest
+	(*ResourceQueryResponse)(nil),     // 29: indexall.v1.ResourceQueryResponse
+	(*AddTagRequest)(nil),             // 30: indexall.v1.AddTagRequest
+	(*AddTagResponse)(nil),            // 31: indexall.v1.AddTagResponse
+	(*RemoveTagRequest)(nil),          // 32: indexall.v1.RemoveTagRequest
+	(*RemoveTagResponse)(nil),         // 33: indexall.v1.RemoveTagResponse
+	(*GetByUrlResponse_Resource)(nil), // 34: indexall.v1.GetByUrlResponse.Resource
 }
 var file_indexall_v1_resource_proto_depIdxs = []int32{
 	0,  // 0: indexall.v1.Resource.status:type_name -> indexall.v1.ResourceStatus
@@ -2483,38 +2610,40 @@ var file_indexall_v1_resource_proto_depIdxs = []int32{
 	0,  // 3: indexall.v1.GetResourceResponse.status:type_name -> indexall.v1.ResourceStatus
 	5,  // 4: indexall.v1.GetResourceResponse.tags:type_name -> indexall.v1.ResourceTag
 	0,  // 5: indexall.v1.ListResourcesRequest.status:type_name -> indexall.v1.ResourceStatus
-	17, // 6: indexall.v1.ListResourcesResponse.items:type_name -> indexall.v1.ResourceListItem
+	19, // 6: indexall.v1.ListResourcesResponse.items:type_name -> indexall.v1.ResourceListItem
 	0,  // 7: indexall.v1.ResourceListItem.status:type_name -> indexall.v1.ResourceStatus
 	5,  // 8: indexall.v1.ResourceListItem.tags:type_name -> indexall.v1.ResourceTag
-	20, // 9: indexall.v1.SearchResourcesResponse.items:type_name -> indexall.v1.ResourceSearchResult
-	23, // 10: indexall.v1.ResourceSearchResult.tags:type_name -> indexall.v1.TagInfo
+	22, // 9: indexall.v1.SearchResourcesResponse.items:type_name -> indexall.v1.ResourceSearchResult
+	25, // 10: indexall.v1.ResourceSearchResult.tags:type_name -> indexall.v1.TagInfo
 	1,  // 11: indexall.v1.ResourceSearchResult.match_source:type_name -> indexall.v1.MatchSource
-	32, // 12: indexall.v1.GetByUrlResponse.resource:type_name -> indexall.v1.GetByUrlResponse.Resource
+	34, // 12: indexall.v1.GetByUrlResponse.resource:type_name -> indexall.v1.GetByUrlResponse.Resource
 	2,  // 13: indexall.v1.TagQuery.tag_scope:type_name -> indexall.v1.TagQuery.TagScope
 	3,  // 14: indexall.v1.KeywordQuery.field_scope:type_name -> indexall.v1.KeywordQuery.FieldScope
 	4,  // 15: indexall.v1.KeywordQuery.tag_scope:type_name -> indexall.v1.KeywordQuery.TagScope
-	24, // 16: indexall.v1.ResourceQueryRequest.tag_query:type_name -> indexall.v1.TagQuery
-	25, // 17: indexall.v1.ResourceQueryRequest.keyword_query:type_name -> indexall.v1.KeywordQuery
-	20, // 18: indexall.v1.ResourceQueryResponse.items:type_name -> indexall.v1.ResourceSearchResult
+	26, // 16: indexall.v1.ResourceQueryRequest.tag_query:type_name -> indexall.v1.TagQuery
+	27, // 17: indexall.v1.ResourceQueryRequest.keyword_query:type_name -> indexall.v1.KeywordQuery
+	22, // 18: indexall.v1.ResourceQueryResponse.items:type_name -> indexall.v1.ResourceSearchResult
 	5,  // 19: indexall.v1.GetByUrlResponse.Resource.tags:type_name -> indexall.v1.ResourceTag
 	7,  // 20: indexall.v1.ResourceService.Create:input_type -> indexall.v1.CreateResourceRequest
 	9,  // 21: indexall.v1.ResourceService.Update:input_type -> indexall.v1.UpdateResourceRequest
-	11, // 22: indexall.v1.ResourceService.Delete:input_type -> indexall.v1.DeleteResourceRequest
-	13, // 23: indexall.v1.ResourceService.Get:input_type -> indexall.v1.GetResourceRequest
-	26, // 24: indexall.v1.ResourceService.Query:input_type -> indexall.v1.ResourceQueryRequest
-	21, // 25: indexall.v1.ResourceService.GetByUrl:input_type -> indexall.v1.GetByUrlRequest
-	28, // 26: indexall.v1.ResourceService.AddTag:input_type -> indexall.v1.AddTagRequest
-	30, // 27: indexall.v1.ResourceService.RemoveTag:input_type -> indexall.v1.RemoveTagRequest
-	8,  // 28: indexall.v1.ResourceService.Create:output_type -> indexall.v1.CreateResourceResponse
-	10, // 29: indexall.v1.ResourceService.Update:output_type -> indexall.v1.UpdateResourceResponse
-	12, // 30: indexall.v1.ResourceService.Delete:output_type -> indexall.v1.DeleteResourceResponse
-	14, // 31: indexall.v1.ResourceService.Get:output_type -> indexall.v1.GetResourceResponse
-	27, // 32: indexall.v1.ResourceService.Query:output_type -> indexall.v1.ResourceQueryResponse
-	22, // 33: indexall.v1.ResourceService.GetByUrl:output_type -> indexall.v1.GetByUrlResponse
-	29, // 34: indexall.v1.ResourceService.AddTag:output_type -> indexall.v1.AddTagResponse
-	31, // 35: indexall.v1.ResourceService.RemoveTag:output_type -> indexall.v1.RemoveTagResponse
-	28, // [28:36] is the sub-list for method output_type
-	20, // [20:28] is the sub-list for method input_type
+	13, // 22: indexall.v1.ResourceService.Delete:input_type -> indexall.v1.DeleteResourceRequest
+	28, // 23: indexall.v1.ResourceService.Query:input_type -> indexall.v1.ResourceQueryRequest
+	23, // 24: indexall.v1.ResourceService.GetByUrl:input_type -> indexall.v1.GetByUrlRequest
+	10, // 25: indexall.v1.ResourceService.GetByExternalId:input_type -> indexall.v1.GetByExternalIdRequest
+	15, // 26: indexall.v1.ResourceService.Get:input_type -> indexall.v1.GetResourceRequest
+	30, // 27: indexall.v1.ResourceService.AddTag:input_type -> indexall.v1.AddTagRequest
+	32, // 28: indexall.v1.ResourceService.RemoveTag:input_type -> indexall.v1.RemoveTagRequest
+	8,  // 29: indexall.v1.ResourceService.Create:output_type -> indexall.v1.CreateResourceResponse
+	12, // 30: indexall.v1.ResourceService.Update:output_type -> indexall.v1.UpdateResourceResponse
+	14, // 31: indexall.v1.ResourceService.Delete:output_type -> indexall.v1.DeleteResourceResponse
+	29, // 32: indexall.v1.ResourceService.Query:output_type -> indexall.v1.ResourceQueryResponse
+	24, // 33: indexall.v1.ResourceService.GetByUrl:output_type -> indexall.v1.GetByUrlResponse
+	11, // 34: indexall.v1.ResourceService.GetByExternalId:output_type -> indexall.v1.GetByExternalIdResponse
+	16, // 35: indexall.v1.ResourceService.Get:output_type -> indexall.v1.GetResourceResponse
+	31, // 36: indexall.v1.ResourceService.AddTag:output_type -> indexall.v1.AddTagResponse
+	33, // 37: indexall.v1.ResourceService.RemoveTag:output_type -> indexall.v1.RemoveTagResponse
+	29, // [29:38] is the sub-list for method output_type
+	20, // [20:29] is the sub-list for method input_type
 	20, // [20:20] is the sub-list for extension type_name
 	20, // [20:20] is the sub-list for extension extendee
 	0,  // [0:20] is the sub-list for field type_name
@@ -2530,13 +2659,14 @@ func file_indexall_v1_resource_proto_init() {
 	file_indexall_v1_resource_proto_msgTypes[2].OneofWrappers = []any{}
 	file_indexall_v1_resource_proto_msgTypes[3].OneofWrappers = []any{}
 	file_indexall_v1_resource_proto_msgTypes[4].OneofWrappers = []any{}
-	file_indexall_v1_resource_proto_msgTypes[9].OneofWrappers = []any{}
-	file_indexall_v1_resource_proto_msgTypes[10].OneofWrappers = []any{}
+	file_indexall_v1_resource_proto_msgTypes[6].OneofWrappers = []any{}
+	file_indexall_v1_resource_proto_msgTypes[11].OneofWrappers = []any{}
 	file_indexall_v1_resource_proto_msgTypes[12].OneofWrappers = []any{}
-	file_indexall_v1_resource_proto_msgTypes[15].OneofWrappers = []any{}
+	file_indexall_v1_resource_proto_msgTypes[14].OneofWrappers = []any{}
 	file_indexall_v1_resource_proto_msgTypes[17].OneofWrappers = []any{}
-	file_indexall_v1_resource_proto_msgTypes[18].OneofWrappers = []any{}
-	file_indexall_v1_resource_proto_msgTypes[21].OneofWrappers = []any{
+	file_indexall_v1_resource_proto_msgTypes[19].OneofWrappers = []any{}
+	file_indexall_v1_resource_proto_msgTypes[20].OneofWrappers = []any{}
+	file_indexall_v1_resource_proto_msgTypes[23].OneofWrappers = []any{
 		(*ResourceQueryRequest_TagQuery)(nil),
 		(*ResourceQueryRequest_KeywordQuery)(nil),
 	}
@@ -2546,7 +2676,7 @@ func file_indexall_v1_resource_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_indexall_v1_resource_proto_rawDesc), len(file_indexall_v1_resource_proto_rawDesc)),
 			NumEnums:      5,
-			NumMessages:   28,
+			NumMessages:   30,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

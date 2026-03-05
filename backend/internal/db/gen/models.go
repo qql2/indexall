@@ -29,12 +29,6 @@ type ResourceTag struct {
 	CreatedAt  sql.NullTime `db:"created_at" json:"created_at"`
 }
 
-type ResourcesFt struct {
-	ResourceID  string `db:"resource_id" json:"resource_id"`
-	Title       string `db:"title" json:"title"`
-	Description string `db:"description" json:"description"`
-}
-
 type Tag struct {
 	ID        string         `db:"id" json:"id"`
 	Name      string         `db:"name" json:"name"`

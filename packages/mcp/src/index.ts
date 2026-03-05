@@ -22,6 +22,7 @@ import {
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { resourceTools, handleResourceTools } from "./tools/resources.js";
 import { tagTools, handleTagTools } from "./tools/tags.js";
+import { connectorTools, handleConnectorTools } from "./tools/connectors.js";
 
 // ============================================================================
 // Server Setup
@@ -40,7 +41,7 @@ const server = new Server(
 );
 
 // Combine all tools
-const allTools: Tool[] = [...tagTools, ...resourceTools];
+const allTools: Tool[] = [...tagTools, ...resourceTools, ...connectorTools];
 
 // ============================================================================
 // Request Handlers
@@ -66,6 +67,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       );
     } else if (resourceTools.some((t) => t.name === toolName)) {
       result = await handleResourceTools(
+        toolName,
+        toolInput as Record<string, unknown>,
+      );
+    } else if (connectorTools.some((t) => t.name === toolName)) {
+      result = await handleConnectorTools(
         toolName,
         toolInput as Record<string, unknown>,
       );

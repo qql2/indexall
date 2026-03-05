@@ -19,6 +19,14 @@ SET title = COALESCE(?, title),
     updated_at = CURRENT_TIMESTAMP
 WHERE id = ?;
 
+-- name: UpdateResourceExternalId :exec
+-- Used when a filesystem file is moved/renamed to update its tracking path
+UPDATE resources
+SET external_id = ?,
+    url = ?,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = ?;
+
 -- name: DeleteResource :exec
 DELETE FROM resources WHERE id = ?;
 
