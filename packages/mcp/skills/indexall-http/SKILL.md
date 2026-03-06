@@ -5,57 +5,31 @@ description: "Manage and organize your resource collection using IndexAll via di
 
 # IndexAll Assistant (HTTP Mode)
 
-Direct HTTP version of IndexAll Assistant. No MCP required — all operations via HTTP calls.
-
-## Service URLs
-
-- **Backend**: `http://localhost:8080` (or `$INDEXALL_API_URL`)
-- **Filesystem Daemon**: `http://localhost:47832` (or `$INDEXALL_DAEMON_URL`)
+**Backend**: `http://localhost:8080` (or `$INDEXALL_API_URL`)
+**Filesystem Daemon**: `http://localhost:47832` (or `$INDEXALL_DAEMON_URL`)
 
 ---
 
-## Quick Start
+## Workflows
 
-### Find Resources
-1. Ask what you're looking for
-2. Search by tag or keyword via `POST /v1/resources/query`
-3. Refine as needed
+### 1. Index New Resources
 
-### Index a New Resource
-- **Local file**: `POST :47832/index { "path": "/abs/path" }` → then tag it
-- **URL/Web resource**: `POST :8080/v1/resources { "title", "url", "source" }` → then tag it
-
-### Organize Tags
-1. `GET /v1/tags/tree` to see current structure
-2. Create/restructure tags as needed
-3. Link resources to tags
-
----
-
-## Core Workflows
-
-### Workflow 1: Index New Resources
-
-**Goal**: Add new resources and categorize them properly
-
-**Steps**:
-1. Check if already indexed: `GET /v1/resources/by-url?url=<encoded>` or search by keyword
-2. Create the resource (**choose by type**):
-   - **Local file**: `POST http://localhost:47832/index` with `{ "path": "/absolute/path" }`
-     → ⚠️ Do NOT use `create_resource` for local files — daemon manages `source`/`external_id` format, bypassing it breaks move/deletion tracking
-   - **Web URL / GitHub / Notion / etc.**: `POST /v1/resources` with `{ "title", "url", "source": "manual", "description" }`
-3. Assign tags: `POST /v1/resources/{id}/tags` with `{ "tag_id": "<id>" }`
-4. Verify: `POST /v1/resources/query` to confirm it's discoverable
-
-**Best for**: Importing bookmarks, indexing files, adding research materials
+1. Check if already indexed: `GET /v1/resources/by-url?url=<encoded>` or keyword search
+2. Create (**type matters**):
+   - **Local file**: `POST :47832/index { "path": "/absolute/path" }`
+     ⚠️ Never use `POST /v1/resources` for local files — the daemon manages `source`/`external_id` for move/deletion tracking
+   - **Web/URL**: `POST /v1/resources { "title", "url", "source": "manual", "description" }`
+3. Find the right tag — **search before creating**:
+   - `GET /v1/tags/search?query=<concept>` — try the topic name and synonyms
+   - Found → use its `id`; Not found → create one (see Workflow 3)
+4. Assign: `POST /v1/resources/{id}/tags { "tag_id": "<id>" }`
+5. Verify: `POST /v1/resources/query`
 
 ---
 
-### Workflow 2: Find Resources
+### 2. Find Resources
 
-**Goal**: Find resources by topic, keyword, or category
-
-**By tag** (get everything under a category):
+**By tag** (browse a category and all subtopics):
 ```
 POST /v1/resources/query
 { "tag_query": { "tag_id": "<id>", "tag_scope": "WITH_DESCENDANTS" }, "page": 1, "page_size": 20 }
@@ -67,97 +41,83 @@ POST /v1/resources/query
 { "keyword_query": { "keyword": "<query>", "field_scope": "ALL", "tag_scope": "WITH_ANCESTORS" } }
 ```
 
-**Steps**:
-1. If you have a topic but not a tag ID: `GET /v1/tags/search?query=<topic>&tag_scope=WITH_ANCESTORS`
-2. Use the tag ID for precise filtering, or keyword for broad search
-3. Examine details: `GET /v1/resources/{id}`
+Don't have a tag ID? `GET /v1/tags/search?query=<topic>&tag_scope=WITH_ANCESTORS`
 
-**`tag_scope` meanings**:
-- `WITH_DESCENDANTS` — this tag + all subtopics (use when browsing a category)
-- `WITH_ANCESTORS` — this tag + all parent contexts (use when keyword searching)
-- `DIRECT` — exact tag only
+**`tag_scope`**: `WITH_DESCENDANTS` = tag + all subtopics · `WITH_ANCESTORS` = tag + all parents · `DIRECT` = exact tag only
 
 ---
 
-### Workflow 3: Refactor Tag Taxonomy
+### 3. Create or Update Tags (Alias-First)
 
-**Goal**: Improve tag hierarchy (restructure, consolidate, add missing tags)
+**⚠️ Always search before creating a tag.**
 
-**Steps**:
-1. `GET /v1/tags/tree` — review current structure
-2. Identify gaps or issues
-3. Execute changes:
-   - Create: `POST /v1/tags { "name", "color": "#hex", "parent_ids": [] }`
-   - Add alias: `POST /v1/tags/{id}/aliases { "alias": "<name>" }`
-   - Add parent: `POST /v1/tags/{child_id}/parents { "parent_id": "<id>" }`
-   - Remove parent: `DELETE /v1/tags/{child_id}/parents/{parent_id}`
-   - Update: `PATCH /v1/tags/{id} { "name", "color" }`
-   - Delete: `DELETE /v1/tags/{id}`
-4. Verify: search again to confirm resources still discoverable
+`GET /v1/tags/search?query=<concept>` — try multiple synonyms first.
 
----
+| Result | Action |
+|--------|--------|
+| Exact match | Use it, no changes needed |
+| Same concept, different name | Add alias: `POST /v1/tags/{id}/aliases { "alias": "<name>" }` |
+| Broader concept exists | Create child tag under it |
+| No match | Create new tag |
 
-### Workflow 4: Bulk Retag
+**Alias vs new tag**:
+- **Alias**: same concept, different spellings/languages ("ReactJS"→"React", "机器学习"→"Machine Learning", "ML"→"Machine Learning")
+- **Child tag**: a genuine sub-domain ("PyTorch" under "Deep Learning")
+- **New tag**: truly new domain
 
-**Goal**: Fix miscategorized resources or reorganize a batch
-
-**Steps**:
-1. `POST /v1/resources/query` to get the batch
-2. For each resource: `POST /v1/resources/{id}/tags` or `DELETE /v1/resources/{id}/tags/{tag_id}`
-3. Verify final state with another query
-
----
-
-## API Reference (Quick)
-
-### Resources
+**API**:
 ```
-POST   /v1/resources/query          unified query (tag or keyword)
-POST   /v1/resources                create (URL/web resources only)
+POST   /v1/tags                          { name, color: "#hex", parent_ids: [] }
+POST   /v1/tags/{id}/aliases             { "alias": "<name>" }
+DELETE /v1/tags/aliases/{alias_id}
+POST   /v1/tags/{child_id}/parents       { "parent_id": "<id>" }
+DELETE /v1/tags/{child_id}/parents/{parent_id}
+PATCH  /v1/tags/{id}                     { name, color }
+DELETE /v1/tags/{id}
+```
+
+---
+
+### 4. Bulk Retag
+
+1. `POST /v1/resources/query` to get the batch
+2. For each: `POST /v1/resources/{id}/tags` or `DELETE /v1/resources/{id}/tags/{tag_id}`
+3. Verify with another query
+
+---
+
+## API Reference
+
+```
+# Resources
+POST   /v1/resources/query              unified query (tag or keyword)
+POST   /v1/resources                    create (URL/web only)
 GET    /v1/resources/{id}
-PATCH  /v1/resources/{id}           { title, description, url }
+PATCH  /v1/resources/{id}              { title, description, url }
 DELETE /v1/resources/{id}
 GET    /v1/resources/by-url?url=<encoded>
-POST   /v1/resources/{id}/tags      { "tag_id": "<id>" }
+POST   /v1/resources/{id}/tags         { "tag_id": "<id>" }
 DELETE /v1/resources/{id}/tags/{tag_id}
-```
 
-### Tags
-```
-GET    /v1/tags                     list all
-GET    /v1/tags/tree                full DAG tree
-GET    /v1/tags/search?query=<q>&tag_scope=WITH_ANCESTORS
-POST   /v1/tags                     { name, color, parent_ids }
+# Tags
+GET    /v1/tags                        list all
+GET    /v1/tags/tree                   full DAG tree
+GET    /v1/tags/search?query=<q>&tag_scope=<scope>
+POST   /v1/tags                        { name, color, parent_ids }
 PATCH  /v1/tags/{id}
 DELETE /v1/tags/{id}
-POST   /v1/tags/{id}/aliases        { "alias": "<name>" }
+POST   /v1/tags/{id}/aliases           { "alias": "<name>" }
 DELETE /v1/tags/aliases/{alias_id}
-POST   /v1/tags/{child_id}/parents  { "parent_id": "<id>" }
+POST   /v1/tags/{child_id}/parents     { "parent_id": "<id>" }
 DELETE /v1/tags/{child_id}/parents/{parent_id}
-```
 
-### Filesystem Connector (local files)
-```
-POST   http://localhost:47832/index  { "path": "/absolute/path" }
+# Filesystem Daemon
+POST   http://localhost:47832/index    { "path": "/absolute/path" }
 → { "id": "<resource-id>", "created": true|false }
 ```
 
 ---
 
-## Tips
-
-- **Use `WITH_DESCENDANTS`** when browsing a category to get all subtopics
-- **Use `WITH_ANCESTORS`** when keyword searching to catch broader matches
-- **Alias tags** with multiple names so fuzzy search finds them (`add_alias "ReactJS"` for "React")
-- **Hierarchy should be meaningful**: parent-child = is-a relationship, not just broad-to-narrow
-- **`index_local_file` is idempotent**: safe to call multiple times on the same file
-
 ## Customization
 
-Your taxonomy is documented in [`references/taxonomy.md`](references/taxonomy.md). Review and update it to:
-- Document your tag structure
-- Explain why tags are organized as they are
-- Define what each branch of the hierarchy is for
-- Store examples of resources in each category
-
-This helps me understand your organization and make better suggestions.
+Your taxonomy: [`references/taxonomy.md`](references/taxonomy.md) — review to understand existing structure before making changes.
