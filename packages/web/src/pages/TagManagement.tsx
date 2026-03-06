@@ -531,9 +531,9 @@ export default function TagManagement() {
       {/* Tags View */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle>All Tags ({tags.length})</CardTitle>
-            <div className="relative w-64">
+            <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 placeholder="Search tags..."
@@ -590,7 +590,7 @@ export default function TagManagement() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-1 flex-shrink-0 ml-2">
+                  <div className="flex gap-1 flex-shrink-0 ml-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -598,7 +598,6 @@ export default function TagManagement() {
                         setEditingTag(tag);
                         setEditDialogOpen(true);
                       }}
-                      className="opacity-0 group-hover:opacity-100"
                     >
                       <Edit2 className="w-4 h-4" />
                     </Button>
@@ -606,7 +605,6 @@ export default function TagManagement() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteTag(tag.id)}
-                      className="opacity-0 group-hover:opacity-100"
                     >
                       <Trash2 className="w-4 h-4 text-red-600" />
                     </Button>

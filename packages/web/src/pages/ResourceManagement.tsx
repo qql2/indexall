@@ -536,8 +536,8 @@ export default function ResourceManagement({ searchQuery = '' }: { searchQuery?:
                     )}
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex gap-1 flex-shrink-0 ml-2">
+                  {/* Action Buttons — always visible on mobile, hover-reveal on desktop */}
+                  <div className="flex gap-1 flex-shrink-0 ml-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -545,7 +545,6 @@ export default function ResourceManagement({ searchQuery = '' }: { searchQuery?:
                         setEditingResource(resource);
                         setEditDialogOpen(true);
                       }}
-                      className="opacity-0 group-hover:opacity-100"
                     >
                       <Edit2 className="w-4 h-4" />
                     </Button>
@@ -553,7 +552,6 @@ export default function ResourceManagement({ searchQuery = '' }: { searchQuery?:
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteResource(resource.id)}
-                      className="opacity-0 group-hover:opacity-100"
                     >
                       <Trash2 className="w-4 h-4 text-red-600" />
                     </Button>
