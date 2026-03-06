@@ -60,8 +60,29 @@ func (s *TagService) Create(ctx context.Context, req *indexallv1.CreateTagReques
 		}
 	}
 
+	// Validate parent IDs and cycle-check before opening transaction
 	tagID := uuid.New().String()
-	tag, err := s.q.CreateTag(ctx, gen.CreateTagParams{
+	for _, parentID := range req.ParentIds {
+		if _, err := s.q.GetTag(ctx, parentID); err != nil {
+			if err == sql.ErrNoRows {
+				return nil, status.Errorf(codes.NotFound, "parent tag %q not found", parentID)
+			}
+			return nil, status.Errorf(codes.Internal, "failed to get parent tag: %v", err)
+		}
+		// tagID is new so no existing ancestors; only check self-loop
+		if parentID == tagID {
+			return nil, status.Errorf(codes.InvalidArgument, "parent %q would create a cycle", parentID)
+		}
+	}
+
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to begin transaction: %v", err)
+	}
+	defer tx.Rollback()
+	qtx := s.q.WithTx(tx)
+
+	tag, err := qtx.CreateTag(ctx, gen.CreateTagParams{
 		ID:    tagID,
 		Name:  req.Name,
 		Color: nilIfEmpty(req.Color),
@@ -72,7 +93,7 @@ func (s *TagService) Create(ctx context.Context, req *indexallv1.CreateTagReques
 
 	// Create aliases
 	for _, alias := range req.Aliases {
-		_, err := s.q.CreateAlias(ctx, gen.CreateAliasParams{
+		_, err := qtx.CreateAlias(ctx, gen.CreateAliasParams{
 			ID:    uuid.New().String(),
 			TagID: tagID,
 			Alias: alias,
@@ -84,13 +105,17 @@ func (s *TagService) Create(ctx context.Context, req *indexallv1.CreateTagReques
 
 	// Add parent relations
 	for _, parentID := range req.ParentIds {
-		err := s.q.CreateTagRelation(ctx, gen.CreateTagRelationParams{
+		err = qtx.CreateTagRelation(ctx, gen.CreateTagRelationParams{
 			ParentID: parentID,
 			ChildID:  tagID,
 		})
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to add parent relation: %v", err)
 		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to commit transaction: %v", err)
 	}
 
 	s.logVault(vault.OpCreate, vault.EntityTag, tagID, vault.TagData{
@@ -448,7 +473,33 @@ func (s *TagService) AddParent(ctx context.Context, req *indexallv1.AddParentReq
 		return nil, status.Error(codes.InvalidArgument, "child_id and parent_id are required")
 	}
 
-	err := s.q.CreateTagRelation(ctx, gen.CreateTagRelationParams{
+	// Verify both tags exist
+	if _, err := s.q.GetTag(ctx, req.ParentId); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, status.Errorf(codes.NotFound, "parent tag %q not found", req.ParentId)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get parent tag: %v", err)
+	}
+	if _, err := s.q.GetTag(ctx, req.ChildId); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, status.Errorf(codes.NotFound, "child tag %q not found", req.ChildId)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get child tag: %v", err)
+	}
+
+	// Check for DAG cycle
+	wouldCycle, err := s.q.CheckCycleWouldExist(ctx, gen.CheckCycleWouldExistParams{
+		ParentID: req.ParentId,
+		ChildID:  req.ChildId,
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to check cycle: %v", err)
+	}
+	if wouldCycle != 0 {
+		return nil, status.Error(codes.InvalidArgument, "adding this parent relation would create a cycle")
+	}
+
+	err = s.q.CreateTagRelation(ctx, gen.CreateTagRelationParams{
 		ParentID: req.ParentId,
 		ChildID:  req.ChildId,
 	})

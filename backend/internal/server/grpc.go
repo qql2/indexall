@@ -3,19 +3,23 @@ package server
 import (
 	indexallv1 "github.com/construct/indexall/api/indexall/v1"
 	"github.com/construct/indexall/internal/conf"
+	"github.com/construct/indexall/internal/server/middleware"
 	"github.com/construct/indexall/internal/service"
 
 	"github.com/go-kratos/kratos/v2/log"
+	kratosMiddleware "github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Server, tagService *service.TagService, resourceService *service.ResourceService, logger log.Logger) *grpc.Server {
+func NewGRPCServer(c *conf.Server, tagService *service.TagService, resourceService *service.ResourceService, logger log.Logger, apiKey string) *grpc.Server {
+	middlewares := []kratosMiddleware.Middleware{recovery.Recovery()}
+	if apiKey != "" {
+		middlewares = append(middlewares, middleware.APIKeyAuth(apiKey))
+	}
 	var opts = []grpc.ServerOption{
-		grpc.Middleware(
-			recovery.Recovery(),
-		),
+		grpc.Middleware(middlewares...),
 	}
 	if c.Grpc.Network != "" {
 		opts = append(opts, grpc.Network(c.Grpc.Network))

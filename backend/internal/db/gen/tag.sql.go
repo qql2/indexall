@@ -11,10 +11,15 @@ import (
 )
 
 const checkCycleWouldExist = `-- name: CheckCycleWouldExist :one
-SELECT CASE
-  WHEN EXISTS(
-    SELECT 1 FROM tag_relations WHERE parent_id = ? AND child_id = ?
-  ) THEN 1 ELSE 0 END as would_create_cycle
+-- Check if adding (parent_id as parent of child_id) would create a cycle.
+-- Cycle exists if child_id is already an ancestor of parent_id, or parent_id = child_id.
+WITH RECURSIVE ancestors(id) AS (
+  SELECT parent_id FROM tag_relations WHERE child_id = ?
+  UNION ALL
+  SELECT tr.parent_id FROM tag_relations tr
+  INNER JOIN ancestors a ON tr.child_id = a.id
+)
+SELECT CASE WHEN EXISTS(SELECT 1 FROM ancestors WHERE id = ?) OR ? = ? THEN 1 ELSE 0 END as would_create_cycle
 `
 
 type CheckCycleWouldExistParams struct {
@@ -22,10 +27,9 @@ type CheckCycleWouldExistParams struct {
 	ChildID  string `db:"child_id" json:"child_id"`
 }
 
-// Check if adding parent_id as parent to child_id would create a cycle
-// Simple check: does this parent already have the child as an ancestor?
+// CheckCycleWouldExist checks if adding (parent_id as parent of child_id) would create a cycle.
 func (q *Queries) CheckCycleWouldExist(ctx context.Context, arg CheckCycleWouldExistParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, checkCycleWouldExist, arg.ParentID, arg.ChildID)
+	row := q.db.QueryRowContext(ctx, checkCycleWouldExist, arg.ParentID, arg.ChildID, arg.ParentID, arg.ChildID)
 	var would_create_cycle int64
 	err := row.Scan(&would_create_cycle)
 	return would_create_cycle, err

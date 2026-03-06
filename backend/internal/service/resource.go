@@ -67,8 +67,15 @@ func (s *ResourceService) Create(ctx context.Context, req *indexallv1.CreateReso
 		}
 	}
 
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to begin transaction: %v", err)
+	}
+	defer tx.Rollback()
+	qtx := s.q.WithTx(tx)
+
 	resourceID := uuid.New().String()
-	resource, err := s.q.CreateResource(ctx, gen.CreateResourceParams{
+	resource, err := qtx.CreateResource(ctx, gen.CreateResourceParams{
 		ID:          resourceID,
 		Source:      source,
 		ExternalID:  externalID,
@@ -84,10 +91,16 @@ func (s *ResourceService) Create(ctx context.Context, req *indexallv1.CreateReso
 
 	// Add tags
 	for _, tagID := range req.TagIds {
-		_ = s.q.AddTagToResource(ctx, gen.AddTagToResourceParams{
+		if err := qtx.AddTagToResource(ctx, gen.AddTagToResourceParams{
 			ResourceID: resourceID,
 			TagID:      tagID,
-		})
+		}); err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to add tag %q: %v", tagID, err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to commit transaction: %v", err)
 	}
 
 	// Get tags for response
@@ -242,7 +255,7 @@ func (s *ResourceService) Get(ctx context.Context, req *indexallv1.GetResourceRe
 		Url:         nullStringToPointer(resource.Url),
 		OpenWith:    nullStringToPointer(resource.OpenWith),
 		Metadata:    nullStringToPointer(resource.Metadata),
-		Status:      indexallv1.ResourceStatus(indexallv1.ResourceStatus_RESOURCE_STATUS_ACTIVE), // TODO: parse from resource.Status
+		Status:      parseResourceStatus(resource.Status),
 		CreatedAt:   nullTimeToString(resource.CreatedAt),
 		UpdatedAt:   nullTimeToString(resource.UpdatedAt),
 		Tags:        tags,
@@ -361,6 +374,14 @@ func (s *ResourceService) RemoveTag(ctx context.Context, req *indexallv1.RemoveT
 			return nil, status.Error(codes.NotFound, "resource not found")
 		}
 		return nil, status.Errorf(codes.Internal, "failed to get resource: %v", err)
+	}
+
+	// Verify tag exists
+	if _, err := s.q.GetTag(ctx, req.TagId); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, status.Errorf(codes.NotFound, "tag %q not found", req.TagId)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get tag: %v", err)
 	}
 
 	err := s.q.RemoveTagFromResource(ctx, gen.RemoveTagFromResourceParams{

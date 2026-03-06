@@ -105,7 +105,7 @@ func main() {
 
 	// Create gRPC and HTTP servers
 	apiKey := os.Getenv("INDEXALL_API_KEY")
-	gs := server.NewGRPCServer(bc.Server, tagService, resourceService, logger)
+	gs := server.NewGRPCServer(bc.Server, tagService, resourceService, logger, apiKey)
 	hs := server.NewHTTPServer(bc.Server, tagService, resourceService, logger, apiKey)
 
 	// Create and run Kratos app

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"time"
 
+	indexallv1 "github.com/construct/indexall/api/indexall/v1"
 	"github.com/construct/indexall/internal/db/gen"
 )
 
@@ -50,6 +51,20 @@ func nilIfEmpty(s *string) sql.NullString {
 		return sql.NullString{Valid: false}
 	}
 	return sql.NullString{String: *s, Valid: true}
+}
+
+func parseResourceStatus(ns sql.NullString) indexallv1.ResourceStatus {
+	if !ns.Valid {
+		return indexallv1.ResourceStatus_RESOURCE_STATUS_ACTIVE
+	}
+	switch ns.String {
+	case "stale":
+		return indexallv1.ResourceStatus_RESOURCE_STATUS_STALE
+	case "deleted":
+		return indexallv1.ResourceStatus_RESOURCE_STATUS_DELETED
+	default:
+		return indexallv1.ResourceStatus_RESOURCE_STATUS_ACTIVE
+	}
 }
 
 func getTagAliases(ctx context.Context, q *gen.Queries, tagID string) []string {
