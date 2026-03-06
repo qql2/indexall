@@ -99,7 +99,10 @@ func TestSearchTagsDirect(t *testing.T) {
 	}
 }
 
-// TestSearchTagsWithAncestors tests tag search with WITH_ANCESTORS scope
+// TestSearchTagsWithAncestors tests tag search with WITH_ANCESTORS scope.
+// Hierarchy: Technology (parent) -> Programming (child)
+// Searching "Tech" (matches "Technology") with WITH_ANCESTORS should return
+// BOTH Technology AND Programming (because Programming's ancestor matches).
 func TestSearchTagsWithAncestors(t *testing.T) {
 	database, q := setupTestDB(t)
 	defer database.Close()
@@ -109,12 +112,11 @@ func TestSearchTagsWithAncestors(t *testing.T) {
 	ctx := context.Background()
 	service := NewTagService(database, q, nil)
 
-	// Search including ancestor tags
 	req := &indexallv1.SearchTagsRequest{
-		Query: "Tech",
+		Query:    "Tech",
 		TagScope: indexallv1.SearchTagsRequest_WITH_ANCESTORS,
-		Limit: 20,
-		Offset: 0,
+		Limit:    20,
+		Offset:   0,
 	}
 
 	resp, err := service.Search(ctx, req)
@@ -122,9 +124,102 @@ func TestSearchTagsWithAncestors(t *testing.T) {
 		t.Fatalf("Search failed: %v", err)
 	}
 
-	// Should find Technology tag (matches "Tech")
-	if resp.Total < 1 {
-		t.Errorf("expected at least 1 tag, got %d", resp.Total)
+	// Should find both Technology (direct match) and Programming (its ancestor matches)
+	if resp.Total < 2 {
+		t.Errorf("expected at least 2 tags (Technology + Programming), got %d", resp.Total)
+	}
+
+	foundTech, foundProg := false, false
+	for _, r := range resp.Results {
+		if r.Name == "Technology" {
+			foundTech = true
+		}
+		if r.Name == "Programming" {
+			foundProg = true
+		}
+	}
+	if !foundTech {
+		t.Error("Technology tag not found")
+	}
+	if !foundProg {
+		t.Error("Programming tag not found: WITH_ANCESTORS should return descendants of matched tags")
+	}
+}
+
+// TestSearchTagsWithAncestorsNoFalsePositive verifies that WITH_ANCESTORS does NOT
+// return a parent tag when only the child matches.
+// Searching "Programming" should NOT return "Technology".
+func TestSearchTagsWithAncestorsNoFalsePositive(t *testing.T) {
+	database, q := setupTestDB(t)
+	defer database.Close()
+
+	setupTagTestData(t, q)
+
+	ctx := context.Background()
+	service := NewTagService(database, q, nil)
+
+	req := &indexallv1.SearchTagsRequest{
+		Query:    "Programming",
+		TagScope: indexallv1.SearchTagsRequest_WITH_ANCESTORS,
+		Limit:    20,
+		Offset:   0,
+	}
+
+	resp, err := service.Search(ctx, req)
+	if err != nil {
+		t.Fatalf("Search failed: %v", err)
+	}
+
+	for _, r := range resp.Results {
+		if r.Name == "Technology" {
+			t.Error("Technology (parent) should NOT appear when only child 'Programming' matches with WITH_ANCESTORS")
+		}
+	}
+}
+
+// TestSearchTagsWithDescendants verifies that WITH_DESCENDANTS returns a parent tag
+// when its descendant matches.
+// Searching "Programming" (child) should return BOTH Programming AND Technology (its parent).
+func TestSearchTagsWithDescendants(t *testing.T) {
+	database, q := setupTestDB(t)
+	defer database.Close()
+
+	setupTagTestData(t, q)
+
+	ctx := context.Background()
+	service := NewTagService(database, q, nil)
+
+	req := &indexallv1.SearchTagsRequest{
+		Query:    "Programming",
+		TagScope: indexallv1.SearchTagsRequest_WITH_DESCENDANTS,
+		Limit:    20,
+		Offset:   0,
+	}
+
+	resp, err := service.Search(ctx, req)
+	if err != nil {
+		t.Fatalf("Search failed: %v", err)
+	}
+
+	// Should find both Programming (direct) and Technology (its descendant matches)
+	if resp.Total < 2 {
+		t.Errorf("expected at least 2 tags (Programming + Technology), got %d", resp.Total)
+	}
+
+	foundTech, foundProg := false, false
+	for _, r := range resp.Results {
+		if r.Name == "Technology" {
+			foundTech = true
+		}
+		if r.Name == "Programming" {
+			foundProg = true
+		}
+	}
+	if !foundProg {
+		t.Error("Programming tag not found")
+	}
+	if !foundTech {
+		t.Error("Technology (parent) not found: WITH_DESCENDANTS should return ancestors of matched tags")
 	}
 }
 

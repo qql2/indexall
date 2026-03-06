@@ -336,25 +336,33 @@ func (s *TagService) Search(ctx context.Context, req *indexallv1.SearchTagsReque
 	case indexallv1.SearchTagsRequest_DIRECT:
 		tagScopeClause = ""
 	case indexallv1.SearchTagsRequest_WITH_ANCESTORS:
-		tagScopeClause = `WITH RECURSIVE ancestors AS (
+		// Return tags whose own info matches OR whose ancestor's info matches.
+		// Find direct matches, then walk DOWN to include all their descendants.
+		tagScopeClause = `WITH RECURSIVE seeds AS (
 			SELECT t.id FROM tags t
 			WHERE t.name LIKE ? OR t.id IN (
 				SELECT tag_id FROM tag_aliases WHERE alias LIKE ?
 			)
-			UNION ALL
-			SELECT tr.parent_id FROM tag_relations tr
-			JOIN ancestors a ON tr.child_id = a.id
-		) SELECT DISTINCT id FROM ancestors`
-	case indexallv1.SearchTagsRequest_WITH_DESCENDANTS:
-		tagScopeClause = `WITH RECURSIVE descendants AS (
-			SELECT t.id FROM tags t
-			WHERE t.name LIKE ? OR t.id IN (
-				SELECT tag_id FROM tag_aliases WHERE alias LIKE ?
-			)
+		), result AS (
+			SELECT id FROM seeds
 			UNION ALL
 			SELECT tr.child_id FROM tag_relations tr
-			JOIN descendants d ON tr.parent_id = d.id
-		) SELECT DISTINCT id FROM descendants`
+			JOIN result r ON tr.parent_id = r.id
+		) SELECT DISTINCT id FROM result`
+	case indexallv1.SearchTagsRequest_WITH_DESCENDANTS:
+		// Return tags whose own info matches OR whose descendant's info matches.
+		// Find direct matches, then walk UP to include all their ancestors.
+		tagScopeClause = `WITH RECURSIVE seeds AS (
+			SELECT t.id FROM tags t
+			WHERE t.name LIKE ? OR t.id IN (
+				SELECT tag_id FROM tag_aliases WHERE alias LIKE ?
+			)
+		), result AS (
+			SELECT id FROM seeds
+			UNION ALL
+			SELECT tr.parent_id FROM tag_relations tr
+			JOIN result r ON tr.child_id = r.id
+		) SELECT DISTINCT id FROM result`
 	default:
 		tagScopeClause = ""
 	}
