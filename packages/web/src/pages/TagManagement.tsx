@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Trash2, Plus, AlertCircle, Edit2, List, TreePine } from 'lucide-react';
+import { Trash2, Plus, AlertCircle, Edit2, List, TreePine, Search } from 'lucide-react';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -34,7 +34,7 @@ function TagTreeView({ nodes, allTags, onEdit }: { nodes: TagTreeNode[]; allTags
             />
           )}
           <span className="text-sm font-medium flex-1">{node.name}</span>
-          <Badge variant="secondary" className="text-xs">{node.resource_count}</Badge>
+          <Badge variant="secondary" className="text-xs">{node.resourceCount}</Badge>
           <Button
             size="sm"
             variant="ghost"
@@ -80,7 +80,7 @@ function TagEditDialog({
   const [parentSearchResults, setParentSearchResults] = useState<any[]>([]);
   const [parentOpen, setParentOpen] = useState(false);
   const [parents, setParents] = useState<TagListItem[]>(
-    (tag.parent_ids || []).map(id => allTags.find(t => t.id === id)).filter(Boolean) as TagListItem[]
+    (tag.parentIds || []).map(id => allTags.find(t => t.id === id)).filter(Boolean) as TagListItem[]
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -110,8 +110,8 @@ function TagEditDialog({
   };
 
   const handleRemoveAlias = async (alias: string) => {
-    // Need to find the alias ID from backend response - for now just remove from UI
     try {
+      await tagApi.removeAliasByName(tag.id, alias);
       setAliases(aliases.filter(a => a !== alias));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to remove alias');
@@ -296,7 +296,7 @@ function TagEditDialog({
   );
 }
 
-export default function TagManagement() {
+export default function TagManagement({ highlightTagId }: { highlightTagId?: string }) {
   const [tags, setTags] = useState<TagListItem[]>([]);
   const [treeData, setTreeData] = useState<TagTreeNode[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -311,6 +311,7 @@ export default function TagManagement() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingTag, setEditingTag] = useState<TagListItem | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [tagSearch, setTagSearch] = useState('');
 
   const loadTags = async () => {
     setLoading(true);
@@ -342,6 +343,13 @@ export default function TagManagement() {
   useEffect(() => {
     loadTags();
   }, []);
+
+  useEffect(() => {
+    if (highlightTagId) {
+      const el = document.getElementById(`tag-${highlightTagId}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [highlightTagId, tags]);
 
   const handleCreateTag = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -530,7 +538,18 @@ export default function TagManagement() {
       {/* Tags View */}
       <Card>
         <CardHeader>
-          <CardTitle>All Tags ({tags.length})</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CardTitle>All Tags ({tags.length})</CardTitle>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search tags..."
+                value={tagSearch}
+                onChange={(e) => setTagSearch(e.target.value)}
+                className="pl-9 h-8 text-sm"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -546,10 +565,16 @@ export default function TagManagement() {
             </div>
           ) : viewMode === 'list' ? (
             <div className="grid gap-3">
-              {tags.map((tag) => (
+              {tags.filter(tag => {
+                if (!tagSearch.trim()) return true;
+                const q = tagSearch.toLowerCase();
+                return tag.name.toLowerCase().includes(q) ||
+                  (tag.aliases ?? []).some(a => a.toLowerCase().includes(q));
+              }).map((tag) => (
                 <div
                   key={tag.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors group"
+                  id={`tag-${tag.id}`}
+                  className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors group ${tag.id === highlightTagId ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {tag.color && (
@@ -568,12 +593,12 @@ export default function TagManagement() {
                           </Badge>
                         )}
                         <Badge variant="outline" className="text-xs">
-                          {tag.resource_count} resource{tag.resource_count !== 1 ? 's' : ''}
+                          {tag.resourceCount} resource{tag.resourceCount !== 1 ? 's' : ''}
                         </Badge>
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-1 flex-shrink-0 ml-2">
+                  <div className="flex gap-1 flex-shrink-0 ml-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -581,7 +606,6 @@ export default function TagManagement() {
                         setEditingTag(tag);
                         setEditDialogOpen(true);
                       }}
-                      className="opacity-0 group-hover:opacity-100"
                     >
                       <Edit2 className="w-4 h-4" />
                     </Button>
@@ -589,7 +613,6 @@ export default function TagManagement() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteTag(tag.id)}
-                      className="opacity-0 group-hover:opacity-100"
                     >
                       <Trash2 className="w-4 h-4 text-red-600" />
                     </Button>

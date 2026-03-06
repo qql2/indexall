@@ -502,6 +502,29 @@ func (s *TagService) RemoveAlias(ctx context.Context, req *indexallv1.RemoveAlia
 	}, nil
 }
 
+// RemoveAliasByName deletes an alias by its string value (not UUID).
+// Used by the HTTP API for frontend convenience.
+func (s *TagService) RemoveAliasByName(ctx context.Context, tagID, alias string) error {
+	if tagID == "" || alias == "" {
+		return status.Error(codes.InvalidArgument, "tag_id and alias are required")
+	}
+	row, err := s.q.GetAliasByName(ctx, alias)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return status.Errorf(codes.NotFound, "alias %q not found", alias)
+		}
+		return status.Errorf(codes.Internal, "failed to get alias: %v", err)
+	}
+	if row.TagID != tagID {
+		return status.Errorf(codes.PermissionDenied, "alias does not belong to tag")
+	}
+	if err := s.q.DeleteAlias(ctx, row.ID); err != nil {
+		return status.Errorf(codes.Internal, "failed to delete alias: %v", err)
+	}
+	s.logVault(vault.OpDelete, vault.EntityTagAlias, row.ID, vault.TagAliasData{ID: row.ID})
+	return nil
+}
+
 func (s *TagService) AddParent(ctx context.Context, req *indexallv1.AddParentRequest) (*indexallv1.AddParentResponse, error) {
 	if req.ChildId == "" || req.ParentId == "" {
 		return nil, status.Error(codes.InvalidArgument, "child_id and parent_id are required")
