@@ -307,7 +307,7 @@ export default function ResourceManagement({ searchQuery = '' }: { searchQuery?:
             description: item.description,
             url: item.url,
             status: 1 as const, // Default to ACTIVE
-            created_at: item.created_at,
+            createdAt: item.createdAt,
             tags: item.tags as any, // TagInfo is compatible for display purposes
           }));
           setResources(items);
@@ -350,7 +350,8 @@ export default function ResourceManagement({ searchQuery = '' }: { searchQuery?:
 
     try {
       await resourceApi.delete(id);
-      await loadResources(selectedFilterTag || undefined);
+      // Remove from current list optimistically instead of full reload
+      setResources(prev => prev.filter(r => r.id !== id));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete resource');
     }
@@ -509,7 +510,7 @@ export default function ResourceManagement({ searchQuery = '' }: { searchQuery?:
 
                     {/* Metadata */}
                     <p className="text-xs text-gray-500 mt-1">
-                      {resource.source} • {new Date(resource.created_at).toLocaleDateString()}
+                      {resource.source} • {new Date(resource.createdAt).toLocaleDateString()}
                     </p>
 
                     {/* Description */}

@@ -403,10 +403,11 @@ func (s *ResourceService) RemoveTag(ctx context.Context, req *indexallv1.RemoveT
 	}, nil
 }
 
-// listAllResources returns all active resources with pagination
+// listAllResources returns all resources with pagination
 func (s *ResourceService) listAllResources(ctx context.Context, offset, limit int32) ([]gen.Resource, int64, error) {
-	// Get total count of all resources
-	total, err := s.q.CountResources(ctx, sql.NullString{Valid: false})
+	// Count all resources directly (CountResources uses "WHERE status = ?" which fails for NULL)
+	var total int64
+	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM resources`).Scan(&total)
 	if err != nil {
 		return nil, 0, status.Errorf(codes.Internal, "failed to count resources: %v", err)
 	}
@@ -598,10 +599,11 @@ func (s *ResourceService) queryByTag(ctx context.Context, tq *indexallv1.TagQuer
 	return resources, total, nil
 }
 
-// queryByKeyword queries resources by keyword using LIKE (FTS5 fallback)
+// queryByKeyword queries resources by keyword using LIKE (FTS5 fallback).
+// Empty keyword returns all resources.
 func (s *ResourceService) queryByKeyword(ctx context.Context, kq *indexallv1.KeywordQuery, offset, limit int32) ([]gen.Resource, int64, error) {
 	if kq.Keyword == "" {
-		return nil, 0, status.Error(codes.InvalidArgument, "keyword is required")
+		return s.listAllResources(ctx, offset, limit)
 	}
 
 	// Use LIKE for keyword matching (FTS5 fallback)

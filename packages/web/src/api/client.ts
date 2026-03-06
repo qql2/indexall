@@ -3,6 +3,9 @@
  *
  * This is a hand-written client that calls the gRPC-Gateway HTTP endpoints.
  * The backend serves both gRPC and HTTP (via gRPC-Gateway) on the same port.
+ *
+ * NOTE: gRPC-Gateway converts proto field names to camelCase in JSON responses.
+ * All interfaces here use camelCase to match the actual API responses.
  */
 
 const API_BASE_URL =
@@ -57,10 +60,10 @@ export interface Tag {
   name: string;
   color?: string;
   aliases: string[];
-  parent_ids: string[];
-  resource_count: number;
-  created_at: string;
-  updated_at: string;
+  parentIds: string[];
+  resourceCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateTagRequest {
@@ -75,8 +78,8 @@ export interface CreateTagResponse {
   name: string;
   color?: string;
   aliases: string[];
-  parent_ids: string[];
-  created_at: string;
+  parentIds: string[];
+  createdAt: string;
 }
 
 export interface UpdateTagRequest {
@@ -94,8 +97,8 @@ export interface TagListItem {
   name: string;
   color?: string;
   aliases: string[];
-  parent_ids: string[];
-  resource_count: number;
+  parentIds: string[];
+  resourceCount: number;
 }
 
 export interface ListTagsResponse {
@@ -106,7 +109,7 @@ export interface TagTreeNode {
   id: string;
   name: string;
   color?: string;
-  resource_count: number;
+  resourceCount: number;
   children: TagTreeNode[];
 }
 
@@ -127,7 +130,7 @@ export interface TagSearchResult {
   color?: string;
   description?: string;
   aliases: string[];
-  resource_count: number;
+  resourceCount: number;
 }
 
 export interface SearchTagsResponse {
@@ -174,6 +177,12 @@ export const tagApi = {
   removeAlias: (aliasId: string) =>
     makeRequest<{ success: boolean }>("DELETE", `/tags/aliases/${aliasId}`),
 
+  removeAliasByName: (tagId: string, alias: string) =>
+    makeRequest<{ success: boolean }>(
+      "DELETE",
+      `/tags/${tagId}/aliases/by-name/${encodeURIComponent(alias)}`,
+    ),
+
   addParent: (childId: string, parentId: string) =>
     makeRequest<{ success: boolean }>("POST", `/tags/${childId}/parents`, {
       parent_id: parentId,
@@ -213,14 +222,14 @@ export interface ResourceTag {
 export interface Resource {
   id: string;
   source: string;
-  external_id?: string;
+  externalId?: string;
   title: string;
   description?: string;
   url?: string;
-  open_with?: string;
+  openWith?: string;
   status: ResourceStatus;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   tags: ResourceTag[];
 }
 
@@ -240,7 +249,7 @@ export interface CreateResourceResponse {
   url?: string;
   source: string;
   tags: ResourceTag[];
-  created_at: string;
+  createdAt: string;
 }
 
 export interface UpdateResourceRequest {
@@ -262,7 +271,7 @@ export interface ResourceListItem {
   description?: string;
   url?: string;
   status: ResourceStatus;
-  created_at: string;
+  createdAt: string;
   tags: ResourceTag[];
 }
 
@@ -277,7 +286,7 @@ export interface ListResourcesResponse {
   items: ResourceListItem[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 export interface SearchResourcesRequest {
@@ -309,7 +318,7 @@ export interface ResourceQueryResponse {
   items: ResourceSearchResult[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 export enum MatchSource {
@@ -326,32 +335,32 @@ export interface ResourceSearchResult {
   title: string;
   description?: string;
   url?: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   tags: TagInfo[];
-  match_source: number;
+  matchSource: number;
 }
 
 export interface SearchResourcesResponse {
   items: ResourceSearchResult[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 export interface GetResourceResponse {
   id: string;
   source: string;
-  external_id?: string;
+  externalId?: string;
   title: string;
   description?: string;
   url?: string;
-  open_with?: string;
+  openWith?: string;
   metadata?: string;
   status: ResourceStatus;
-  synced_at?: string;
-  created_at: string;
-  updated_at: string;
+  syncedAt?: string;
+  createdAt: string;
+  updatedAt: string;
   tags: ResourceTag[];
 }
 
@@ -409,7 +418,7 @@ export const resourceApi = {
         description: item.description,
         url: item.url,
         status: 1 as const, // Default to ACTIVE
-        created_at: item.created_at,
+        createdAt: item.createdAt,
         tags: item.tags.map((tag) => ({
           id: tag.id,
           name: tag.name,
@@ -417,7 +426,7 @@ export const resourceApi = {
       })),
       total: response.total,
       page: response.page,
-      page_size: response.page_size,
+      pageSize: response.pageSize,
     } as ListResourcesResponse;
   },
 

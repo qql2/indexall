@@ -29,19 +29,21 @@ function App() {
               </div>
             </div>
 
-            {/* Search Bar */}
-            <div className="flex-1 min-w-64 max-w-md">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search resources, tags..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4"
-                />
+            {/* Search Bar — only shown on Resources tab */}
+            {activeTab === 'resources' && (
+              <div className="flex-1 min-w-64 max-w-md">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search resources..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-4"
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </header>
@@ -58,7 +60,11 @@ function App() {
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Resources</span>
             </TabsTrigger>
-            <TabsTrigger value="tags" className="flex items-center gap-2">
+            <TabsTrigger
+              value="tags"
+              className="flex items-center gap-2"
+              onClick={() => setSearchQuery('')}
+            >
               <Tags className="w-4 h-4" />
               <span className="hidden sm:inline">Tags</span>
             </TabsTrigger>
