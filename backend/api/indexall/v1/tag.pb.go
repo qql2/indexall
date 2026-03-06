@@ -964,6 +964,9 @@ type TagSearchResult struct {
 	Description   *string                `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	Aliases       []string               `protobuf:"bytes,5,rep,name=aliases,proto3" json:"aliases,omitempty"`
 	ResourceCount int32                  `protobuf:"varint,6,opt,name=resource_count,json=resourceCount,proto3" json:"resource_count,omitempty"`
+	// Ancestor tag names from root to immediate parent, used to show match path in UI.
+	// e.g. ["Learning", "Python"] means this tag lives under Learning > Python.
+	Ancestors     []string `protobuf:"bytes,7,rep,name=ancestors,proto3" json:"ancestors,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1038,6 +1041,13 @@ func (x *TagSearchResult) GetResourceCount() int32 {
 		return x.ResourceCount
 	}
 	return 0
+}
+
+func (x *TagSearchResult) GetAncestors() []string {
+	if x != nil {
+		return x.Ancestors
+	}
+	return nil
 }
 
 type AddAliasRequest struct {
@@ -1505,14 +1515,15 @@ const file_indexall_v1_tag_proto_rawDesc = "" +
 	"\x10WITH_DESCENDANTS\x10\x02\"b\n" +
 	"\x12SearchTagsResponse\x126\n" +
 	"\aresults\x18\x01 \x03(\v2\x1c.indexall.v1.TagSearchResultR\aresults\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x05R\x05total\"\xd2\x01\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\"\xf0\x01\n" +
 	"\x0fTagSearchResult\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x19\n" +
 	"\x05color\x18\x03 \x01(\tH\x00R\x05color\x88\x01\x01\x12%\n" +
 	"\vdescription\x18\x04 \x01(\tH\x01R\vdescription\x88\x01\x01\x12\x18\n" +
 	"\aaliases\x18\x05 \x03(\tR\aaliases\x12%\n" +
-	"\x0eresource_count\x18\x06 \x01(\x05R\rresourceCountB\b\n" +
+	"\x0eresource_count\x18\x06 \x01(\x05R\rresourceCount\x12\x1c\n" +
+	"\tancestors\x18\a \x03(\tR\tancestorsB\b\n" +
 	"\x06_colorB\x0e\n" +
 	"\f_description\">\n" +
 	"\x0fAddAliasRequest\x12\x15\n" +

@@ -131,6 +131,7 @@ export interface TagSearchResult {
   description?: string;
   aliases: string[];
   resourceCount: number;
+  ancestors?: string[]; // ordered root → immediate parent, for match path display
 }
 
 export interface SearchTagsResponse {

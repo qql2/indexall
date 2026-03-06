@@ -107,6 +107,9 @@ message TagSearchResult {
   optional string description = 4;
   repeated string aliases = 5;
   int32 resource_count = 6;
+  // Ancestor tag names from root to immediate parent, used to show match path in UI.
+  // e.g. ["Learning", "Python"] means this tag lives under Learning > Python.
+  repeated string ancestors = 7;
 }
 
 message AddAliasRequest {

@@ -9,6 +9,38 @@ import (
 	"github.com/construct/indexall/internal/db/gen"
 )
 
+// getAncestorNames returns the ancestor tag names from root to immediate parent.
+// Used for displaying match path in search results (e.g. ["Learning", "Python"]).
+func getAncestorNames(ctx context.Context, db *sql.DB, tagID string) []string {
+	// Walk up the DAG and collect ancestor ids with their depth
+	rows, err := db.QueryContext(ctx, `
+		WITH RECURSIVE ancestors AS (
+			SELECT tr.parent_id AS id, 1 AS depth
+			FROM tag_relations tr WHERE tr.child_id = ?
+			UNION ALL
+			SELECT tr.parent_id, a.depth + 1
+			FROM tag_relations tr JOIN ancestors a ON tr.child_id = a.id
+		)
+		SELECT t.name, MAX(a.depth) AS depth
+		FROM ancestors a JOIN tags t ON t.id = a.id
+		GROUP BY a.id, t.name
+		ORDER BY depth DESC`, tagID)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+
+	var names []string
+	for rows.Next() {
+		var name string
+		var depth int
+		if err := rows.Scan(&name, &depth); err == nil {
+			names = append(names, name)
+		}
+	}
+	return names
+}
+
 // Helper functions for type conversions
 
 func stringToNullString(s string) sql.NullString {

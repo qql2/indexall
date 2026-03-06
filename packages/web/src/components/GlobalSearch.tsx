@@ -114,7 +114,14 @@ export default function GlobalSearch({ onSelectTag, onSelectResource }: GlobalSe
                     className="flex items-center gap-2"
                   >
                     <Tags className="w-4 h-4 shrink-0 text-muted-foreground" />
-                    <span className="font-medium">{tag.name}</span>
+                    <span className="font-medium">
+                      {(tag.ancestors ?? []).length > 0 && (
+                        <span className="text-muted-foreground font-normal">
+                          {tag.ancestors!.join(' › ')} {'› '}
+                        </span>
+                      )}
+                      {tag.name}
+                    </span>
                     {(tag.aliases ?? []).length > 0 && (
                       <span className="text-xs text-muted-foreground">
                         {tag.aliases.join(', ')}

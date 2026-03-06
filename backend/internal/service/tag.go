@@ -434,6 +434,9 @@ func (s *TagService) Search(ctx context.Context, req *indexallv1.SearchTagsReque
 		// Get resource count
 		resourceCount, _ := s.q.CountResourcesForTag(ctx, tagID)
 
+		// Get ancestor names (root → immediate parent) for path display
+		ancestors := getAncestorNames(ctx, s.db, tagID)
+
 		results = append(results, &indexallv1.TagSearchResult{
 			Id:            tagID,
 			Name:          name,
@@ -441,6 +444,7 @@ func (s *TagService) Search(ctx context.Context, req *indexallv1.SearchTagsReque
 			Description:   nil, // TODO: Add description field to tags table
 			Aliases:       aliases,
 			ResourceCount: int32(resourceCount),
+			Ancestors:     ancestors,
 		})
 	}
 
