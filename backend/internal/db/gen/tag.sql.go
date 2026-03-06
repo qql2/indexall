@@ -642,3 +642,67 @@ func (q *Queries) UpdateTag(ctx context.Context, arg UpdateTagParams) error {
 	_, err := q.db.ExecContext(ctx, updateTag, arg.Name, arg.Color, arg.ID)
 	return err
 }
+
+const listAllTagAliases = `-- name: ListAllTagAliases :many
+SELECT tag_id, alias FROM tag_aliases ORDER BY tag_id ASC, alias ASC
+`
+
+type ListAllTagAliasesRow struct {
+	TagID string `db:"tag_id" json:"tag_id"`
+	Alias string `db:"alias" json:"alias"`
+}
+
+func (q *Queries) ListAllTagAliases(ctx context.Context) ([]ListAllTagAliasesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listAllTagAliases)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAllTagAliasesRow
+	for rows.Next() {
+		var i ListAllTagAliasesRow
+		if err := rows.Scan(&i.TagID, &i.Alias); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAllTagRelations = `-- name: ListAllTagRelations :many
+SELECT parent_id, child_id FROM tag_relations
+`
+
+type ListAllTagRelationsRow struct {
+	ParentID string `db:"parent_id" json:"parent_id"`
+	ChildID  string `db:"child_id" json:"child_id"`
+}
+
+func (q *Queries) ListAllTagRelations(ctx context.Context) ([]ListAllTagRelationsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listAllTagRelations)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAllTagRelationsRow
+	for rows.Next() {
+		var i ListAllTagRelationsRow
+		if err := rows.Scan(&i.ParentID, &i.ChildID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

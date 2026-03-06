@@ -216,20 +216,46 @@ func (s *TagService) Delete(ctx context.Context, req *indexallv1.DeleteTagReques
 }
 
 func (s *TagService) List(ctx context.Context, req *indexallv1.ListTagsRequest) (*indexallv1.ListTagsResponse, error) {
-	tags, err := s.q.ListTags(ctx)
+	tags, err := s.q.GetTagsWithCounts(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list tags: %v", err)
+	}
+	allAliases, err := s.q.ListAllTagAliases(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list aliases: %v", err)
+	}
+	allRelations, err := s.q.ListAllTagRelations(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list relations: %v", err)
+	}
+
+	// Build lookup maps
+	aliasMap := make(map[string][]string)
+	for _, a := range allAliases {
+		aliasMap[a.TagID] = append(aliasMap[a.TagID], a.Alias)
+	}
+	parentMap := make(map[string][]string)
+	for _, r := range allRelations {
+		parentMap[r.ChildID] = append(parentMap[r.ChildID], r.ParentID)
 	}
 
 	items := make([]*indexallv1.TagListItem, len(tags))
 	for i, tag := range tags {
+		aliases := aliasMap[tag.ID]
+		if aliases == nil {
+			aliases = []string{}
+		}
+		parents := parentMap[tag.ID]
+		if parents == nil {
+			parents = []string{}
+		}
 		items[i] = &indexallv1.TagListItem{
 			Id:            tag.ID,
 			Name:          tag.Name,
 			Color:         nullStringToPointer(tag.Color),
-			Aliases:       getTagAliases(ctx, s.q, tag.ID),
-			ParentIds:     getTagParents(ctx, s.q, tag.ID),
-			ResourceCount: getTagResourceCount(ctx, s.q, tag.ID),
+			Aliases:       aliases,
+			ParentIds:     parents,
+			ResourceCount: int32(tag.ResourceCount),
 		}
 	}
 
@@ -239,29 +265,37 @@ func (s *TagService) List(ctx context.Context, req *indexallv1.ListTagsRequest) 
 }
 
 func (s *TagService) GetTree(ctx context.Context, req *indexallv1.GetTreeRequest) (*indexallv1.GetTreeResponse, error) {
-	tags, err := s.q.ListTags(ctx)
+	tags, err := s.q.GetTagsWithCounts(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get tags: %v", err)
 	}
+	allRelations, err := s.q.ListAllTagRelations(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list relations: %v", err)
+	}
 
-	// Find root tags (tags without parents)
+	// Build parent lookup map
+	parentMap := make(map[string][]string)
+	for _, r := range allRelations {
+		parentMap[r.ChildID] = append(parentMap[r.ChildID], r.ParentID)
+	}
+
 	roots := make([]*indexallv1.TagTreeNode, 0)
 	tagMap := make(map[string]*indexallv1.TagTreeNode)
 
 	for _, tag := range tags {
 		node := &indexallv1.TagTreeNode{
-			Id:              tag.ID,
-			Name:            tag.Name,
-			Color:           nullStringToPointer(tag.Color),
-			ResourceCount:   getTagResourceCount(ctx, s.q, tag.ID),
-			Children:        make([]*indexallv1.TagTreeNode, 0),
+			Id:            tag.ID,
+			Name:          tag.Name,
+			Color:         nullStringToPointer(tag.Color),
+			ResourceCount: int32(tag.ResourceCount),
+			Children:      make([]*indexallv1.TagTreeNode, 0),
 		}
 		tagMap[tag.ID] = node
 	}
 
-	// Build parent-child relationships
 	for _, tag := range tags {
-		parents := getTagParents(ctx, s.q, tag.ID)
+		parents := parentMap[tag.ID]
 		if len(parents) == 0 {
 			roots = append(roots, tagMap[tag.ID])
 		} else {

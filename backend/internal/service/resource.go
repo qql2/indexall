@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -453,31 +454,55 @@ func (s *ResourceService) Query(ctx context.Context, req *indexallv1.ResourceQue
 		return nil, err
 	}
 
-	// Build response
-	items := make([]*indexallv1.ResourceSearchResult, len(resources))
-	for i, resource := range resources {
-		// Get tags
-		tags := make([]*indexallv1.TagInfo, 0)
-		tagRows, err := s.q.GetResourceTags(ctx, resource.ID)
-		if err == nil {
-			for _, t := range tagRows {
-				// Get tag aliases
-				aliases := make([]string, 0)
-				aliasRows, aliasErr := s.q.ListAliasesByTag(ctx, t.TagID)
-				if aliasErr == nil {
-					for _, a := range aliasRows {
-						aliases = append(aliases, a.Alias)
+	// Batch-fetch all tags+aliases for the page in a single query
+	// resourceID -> tagID -> TagInfo
+	resourceTagMap := make(map[string]map[string]*indexallv1.TagInfo)
+	if len(resources) > 0 {
+		ids := make([]any, len(resources))
+		for i, r := range resources {
+			ids[i] = r.ID
+		}
+		placeholders := strings.Repeat("?,", len(ids))
+		placeholders = placeholders[:len(placeholders)-1]
+		batchQuery := fmt.Sprintf(`
+			SELECT rt.resource_id, rt.tag_id, t.name, ta.alias
+			FROM resource_tags rt
+			JOIN tags t ON rt.tag_id = t.id
+			LEFT JOIN tag_aliases ta ON t.id = ta.tag_id
+			WHERE rt.resource_id IN (%s)
+			ORDER BY rt.resource_id, t.name, ta.alias`, placeholders)
+		rows, qErr := s.db.QueryContext(ctx, batchQuery, ids...)
+		if qErr == nil {
+			defer rows.Close()
+			for rows.Next() {
+				var resourceID, tagID, name string
+				var alias sql.NullString
+				if err := rows.Scan(&resourceID, &tagID, &name, &alias); err != nil {
+					continue
+				}
+				if resourceTagMap[resourceID] == nil {
+					resourceTagMap[resourceID] = make(map[string]*indexallv1.TagInfo)
+				}
+				if _, ok := resourceTagMap[resourceID][tagID]; !ok {
+					resourceTagMap[resourceID][tagID] = &indexallv1.TagInfo{
+						Id:      tagID,
+						Name:    name,
+						Aliases: []string{},
 					}
 				}
-
-				tags = append(tags, &indexallv1.TagInfo{
-					Id:       t.TagID,
-					Name:     t.Name,
-					Aliases:  aliases,
-				})
+				if alias.Valid {
+					resourceTagMap[resourceID][tagID].Aliases = append(resourceTagMap[resourceID][tagID].Aliases, alias.String)
+				}
 			}
 		}
+	}
 
+	items := make([]*indexallv1.ResourceSearchResult, len(resources))
+	for i, resource := range resources {
+		tags := make([]*indexallv1.TagInfo, 0)
+		for _, t := range resourceTagMap[resource.ID] {
+			tags = append(tags, t)
+		}
 		items[i] = &indexallv1.ResourceSearchResult{
 			Id:          resource.ID,
 			Source:      resource.Source,

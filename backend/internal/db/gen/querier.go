@@ -55,6 +55,8 @@ type Querier interface {
 	GetTagsForResource(ctx context.Context, resourceID string) ([]GetTagsForResourceRow, error)
 	GetTagsWithCounts(ctx context.Context) ([]GetTagsWithCountsRow, error)
 	ListAliasesByTag(ctx context.Context, tagID string) ([]ListAliasesByTagRow, error)
+	ListAllTagAliases(ctx context.Context) ([]ListAllTagAliasesRow, error)
+	ListAllTagRelations(ctx context.Context) ([]ListAllTagRelationsRow, error)
 	ListChildTags(ctx context.Context, parentID string) ([]string, error)
 	ListParentTags(ctx context.Context, childID string) ([]string, error)
 	ListResources(ctx context.Context, arg ListResourcesParams) ([]Resource, error)

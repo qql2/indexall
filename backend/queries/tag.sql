@@ -148,3 +148,9 @@ WHERE rt.tag_id = ?;
 SELECT t.id, t.name, t.color FROM tags t
 WHERE t.id IN (SELECT tag_id FROM resource_tags WHERE resource_id = ?)
 ORDER BY t.name ASC;
+
+-- name: ListAllTagAliases :many
+SELECT tag_id, alias FROM tag_aliases ORDER BY tag_id ASC, alias ASC;
+
+-- name: ListAllTagRelations :many
+SELECT parent_id, child_id FROM tag_relations;
