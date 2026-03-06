@@ -527,6 +527,116 @@ func BenchmarkQueryByTag(b *testing.B) {
 	}
 }
 
+// TestQueryByKeywordWithAncestors tests that keyword search with WITH_ANCESTORS
+// returns resources whose associated tag's ANCESTOR matches the keyword.
+// Data: Learning -> Python, resource1/resource2 tagged with Python.
+// Searching "Learning" should find both resources via ancestor tag match.
+func TestQueryByKeywordWithAncestors(t *testing.T) {
+	database, q := setupTestDB(t)
+	defer database.Close()
+
+	_, _, resource1ID, resource2ID := setupTestData(t, q)
+
+	ctx := context.Background()
+	service := NewResourceService(database, q, nil)
+
+	req := &indexallv1.ResourceQueryRequest{
+		Query: &indexallv1.ResourceQueryRequest_KeywordQuery{
+			KeywordQuery: &indexallv1.KeywordQuery{
+				Keyword:    "Learning",
+				FieldScope: indexallv1.KeywordQuery_ALL,
+				TagScope:   indexallv1.KeywordQuery_WITH_ANCESTORS,
+			},
+		},
+		Page:     1,
+		PageSize: 20,
+	}
+
+	resp, err := service.Query(ctx, req)
+	if err != nil {
+		t.Fatalf("Query failed: %v", err)
+	}
+
+	if resp.Total != 2 {
+		t.Errorf("expected 2 resources (Python resources via Learning ancestor), got %d", resp.Total)
+	}
+
+	found := make(map[string]bool)
+	for _, item := range resp.Items {
+		found[item.Id] = true
+	}
+	if !found[resource1ID] {
+		t.Errorf("resource1 (tagged Python, ancestor=Learning) not found")
+	}
+	if !found[resource2ID] {
+		t.Errorf("resource2 (tagged Python, ancestor=Learning) not found")
+	}
+}
+
+// TestQueryByKeywordWithDescendants tests keyword search with WITH_DESCENDANTS:
+// searching "Python" should find resources tagged with Python's ANCESTOR (Learning).
+// But in the test data, resources are tagged with Python (not Learning),
+// so WITH_DESCENDANTS means: include resources where Python's descendant contains keyword.
+// Here we test: resource tagged "Learning" is NOT in test data, so let's test the inverse.
+// A resource tagged "Learning" would be found when searching "Python" WITH_DESCENDANTS.
+func TestQueryByKeywordWithDescendants(t *testing.T) {
+	database, q := setupTestDB(t)
+	defer database.Close()
+
+	learningTagID, _, _, _ := setupTestData(t, q)
+	ctx := context.Background()
+
+	// Add a resource tagged with Learning (the ancestor tag)
+	learningResource, err := q.CreateResource(ctx, gen.CreateResourceParams{
+		ID:     uuid.New().String(),
+		Source: "manual",
+		Title:  "General Learning Resource",
+	})
+	if err != nil {
+		t.Fatalf("failed to create learningResource: %v", err)
+	}
+	if err := q.AddTagToResource(ctx, gen.AddTagToResourceParams{
+		ResourceID: learningResource.ID,
+		TagID:      learningTagID,
+	}); err != nil {
+		t.Fatalf("failed to add tag: %v", err)
+	}
+
+	service := NewResourceService(database, q, nil)
+
+	// Search "Python" WITH_DESCENDANTS: should find resource tagged with Learning
+	// because Learning has descendant Python (which matches "Python")
+	req := &indexallv1.ResourceQueryRequest{
+		Query: &indexallv1.ResourceQueryRequest_KeywordQuery{
+			KeywordQuery: &indexallv1.KeywordQuery{
+				Keyword:    "Python",
+				FieldScope: indexallv1.KeywordQuery_ALL,
+				TagScope:   indexallv1.KeywordQuery_WITH_DESCENDANTS,
+			},
+		},
+		Page:     1,
+		PageSize: 20,
+	}
+
+	resp, err := service.Query(ctx, req)
+	if err != nil {
+		t.Fatalf("Query failed: %v", err)
+	}
+
+	// Should find: resource1, resource2 (directly tagged Python) + learningResource (Learning→Python descendant)
+	if resp.Total != 3 {
+		t.Errorf("expected 3 resources, got %d", resp.Total)
+	}
+
+	found := make(map[string]bool)
+	for _, item := range resp.Items {
+		found[item.Id] = true
+	}
+	if !found[learningResource.ID] {
+		t.Errorf("learningResource (tagged Learning, descendant=Python) not found")
+	}
+}
+
 // BenchmarkQueryByKeyword benchmarks keyword-based queries
 func BenchmarkQueryByKeyword(b *testing.B) {
 	database, q := setupTestDB(&testing.T{})

@@ -668,100 +668,92 @@ func (s *ResourceService) queryByKeyword(ctx context.Context, kq *indexallv1.Key
 		return s.queryByKeywordDirect(ctx, kq, likeKeyword, offset, limit)
 	}
 
-	// Build WHERE clause based on field scope
-	var whereClause string
+	// Field scope: which resource fields to search directly
+	var fieldMatchClause string
+	fieldParamCount := 1
 	switch kq.FieldScope {
 	case indexallv1.KeywordQuery_ALL:
-		whereClause = "(r.title LIKE ? OR r.description LIKE ?)"
+		fieldMatchClause = "(r.title LIKE ? OR r.description LIKE ?)"
+		fieldParamCount = 2
 	case indexallv1.KeywordQuery_TITLE:
-		whereClause = "r.title LIKE ?"
+		fieldMatchClause = "r.title LIKE ?"
 	case indexallv1.KeywordQuery_DESCRIPTION:
-		whereClause = "r.description LIKE ?"
+		fieldMatchClause = "r.description LIKE ?"
 	default:
 		return nil, 0, status.Error(codes.InvalidArgument, "invalid field_scope")
 	}
 
-	// Build tag scope recursion (without WHERE keyword)
-	var tagScopeClause string
+	// Tag scope CTE: start from tags matching keyword by name/alias, recurse in correct direction.
+	//
+	// WITH_ANCESTORS: "resource's tag has an ancestor matching keyword"
+	//   = resource's tag is a DESCENDANT of a keyword-matching tag → recurse downward (child_id)
+	//
+	// WITH_DESCENDANTS: "resource's tag has a descendant matching keyword"
+	//   = resource's tag is an ANCESTOR of a keyword-matching tag → recurse upward (parent_id)
+	var recursiveSelect string
 	switch kq.TagScope {
 	case indexallv1.KeywordQuery_WITH_ANCESTORS:
-		tagScopeClause = `rt.tag_id IN (
-			WITH RECURSIVE ancestors AS (
-				SELECT t.id FROM tags t
-				JOIN resource_tags rt2 ON t.id = rt2.tag_id
-				WHERE rt2.resource_id IN (
-					SELECT r.id FROM resources r WHERE ` + whereClause + `
-				)
-				UNION ALL
-				SELECT tr.parent_id FROM tag_relations tr
-				JOIN ancestors a ON tr.child_id = a.id
-			)
-			SELECT id FROM ancestors
-		)`
+		recursiveSelect = "SELECT tr.child_id FROM tag_relations tr JOIN tag_scope ts ON tr.parent_id = ts.id"
 	case indexallv1.KeywordQuery_WITH_DESCENDANTS:
-		tagScopeClause = `rt.tag_id IN (
-			WITH RECURSIVE descendants AS (
-				SELECT t.id FROM tags t
-				JOIN resource_tags rt2 ON t.id = rt2.tag_id
-				WHERE rt2.resource_id IN (
-					SELECT r.id FROM resources r WHERE ` + whereClause + `
-				)
-				UNION ALL
-				SELECT tr.child_id FROM tag_relations tr
-				JOIN descendants d ON tr.parent_id = d.id
-			)
-			SELECT id FROM descendants
-		)`
+		recursiveSelect = "SELECT tr.parent_id FROM tag_relations tr JOIN tag_scope ts ON tr.child_id = ts.id"
 	default:
 		return nil, 0, status.Error(codes.InvalidArgument, "invalid tag_scope")
 	}
 
-	// Query count
-	countQuery := `SELECT COUNT(DISTINCT r.id) FROM resources r
-		JOIN resource_tags rt ON r.id = rt.resource_id
-		WHERE ` + whereClause + ` AND ` + tagScopeClause
+	// Two-CTE approach: separate non-recursive seed from recursive expansion.
+	// seed_tags: tags directly matching keyword in name or alias (2 params: name, alias).
+	// tag_scope: seed + recursive expansion in chosen direction (no extra params).
+	cte := `WITH RECURSIVE
+	seed_tags(id) AS (
+		SELECT t.id FROM tags t WHERE t.name LIKE ?
+		UNION
+		SELECT ta.tag_id FROM tag_aliases ta WHERE ta.alias LIKE ?
+	),
+	tag_scope(id) AS (
+		SELECT id FROM seed_tags
+		UNION ALL
+		` + recursiveSelect + `
+	)`
 
-	// At this point TagScope is WITH_ANCESTORS or WITH_DESCENDANTS (DIRECT is handled above)
+	// Unified WHERE: resource matches field directly OR is tagged with a tag in tag_scope
+	tagMatchSub := `r.id IN (
+		SELECT rt.resource_id FROM resource_tags rt
+		WHERE rt.tag_id IN (SELECT id FROM tag_scope)
+	)`
+	whereClause := fieldMatchClause + " OR " + tagMatchSub
+
+	// params: 2 (seed CTE: name, alias) + fieldParamCount (title/description match)
+	params := make([]any, 0, 2+fieldParamCount)
+	params = append(params, likeKeyword, likeKeyword)
+	for i := 0; i < fieldParamCount; i++ {
+		params = append(params, likeKeyword)
+	}
+
+	countQuery := cte + "\n\tSELECT COUNT(DISTINCT r.id) FROM resources r WHERE " + whereClause
 	var total int64
-	var countErr error
-	if kq.FieldScope == indexallv1.KeywordQuery_ALL {
-		countErr = s.db.QueryRowContext(ctx, countQuery, likeKeyword, likeKeyword, likeKeyword, likeKeyword).Scan(&total)
-	} else {
-		countErr = s.db.QueryRowContext(ctx, countQuery, likeKeyword, likeKeyword).Scan(&total)
-	}
-	if countErr != nil && countErr != sql.ErrNoRows {
-		return nil, 0, status.Errorf(codes.Internal, "failed to count resources: %v", countErr)
+	if err := s.db.QueryRowContext(ctx, countQuery, params...).Scan(&total); err != nil && err != sql.ErrNoRows {
+		return nil, 0, status.Errorf(codes.Internal, "failed to count resources: %v", err)
 	}
 
-	// Query resources
-	dataQuery := `SELECT DISTINCT r.id, r.source, r.external_id, r.title, r.description, r.url, r.open_with, r.metadata, r.status, r.synced_at, r.created_at, r.updated_at
-		FROM resources r
-		JOIN resource_tags rt ON r.id = rt.resource_id
-		WHERE ` + whereClause + ` AND ` + tagScopeClause + `
-		ORDER BY r.created_at DESC
-		LIMIT ? OFFSET ?`
+	dataQuery := cte + `
+	SELECT DISTINCT r.id, r.source, r.external_id, r.title, r.description, r.url, r.open_with, r.metadata, r.status, r.synced_at, r.created_at, r.updated_at
+	FROM resources r WHERE ` + whereClause + `
+	ORDER BY r.created_at DESC LIMIT ? OFFSET ?`
 
-	// Debug: uncomment to see generated SQL
-	// fmt.Printf("CountQuery: %s\n", countQuery)
-	// fmt.Printf("DataQuery: %s\n", dataQuery)
+	dataParams := make([]any, 0, len(params)+2)
+	dataParams = append(dataParams, params...)
+	dataParams = append(dataParams, limit, offset)
 
-	var rows *sql.Rows
-	var queryErr error
-	if kq.FieldScope == indexallv1.KeywordQuery_ALL {
-		rows, queryErr = s.db.QueryContext(ctx, dataQuery, likeKeyword, likeKeyword, likeKeyword, likeKeyword, limit, offset)
-	} else {
-		rows, queryErr = s.db.QueryContext(ctx, dataQuery, likeKeyword, likeKeyword, limit, offset)
-	}
-	if queryErr != nil {
-		return nil, 0, status.Errorf(codes.Internal, "failed to query resources: %v", queryErr)
+	rows, err := s.db.QueryContext(ctx, dataQuery, dataParams...)
+	if err != nil {
+		return nil, 0, status.Errorf(codes.Internal, "failed to query resources: %v", err)
 	}
 	defer rows.Close()
 
 	var resources []gen.Resource
 	for rows.Next() {
 		var r gen.Resource
-		scanErr := rows.Scan(&r.ID, &r.Source, &r.ExternalID, &r.Title, &r.Description, &r.Url, &r.OpenWith, &r.Metadata, &r.Status, &r.SyncedAt, &r.CreatedAt, &r.UpdatedAt)
-		if scanErr != nil {
+		if scanErr := rows.Scan(&r.ID, &r.Source, &r.ExternalID, &r.Title, &r.Description, &r.Url, &r.OpenWith, &r.Metadata, &r.Status, &r.SyncedAt, &r.CreatedAt, &r.UpdatedAt); scanErr != nil {
 			return nil, 0, status.Errorf(codes.Internal, "failed to scan resource: %v", scanErr)
 		}
 		resources = append(resources, r)
