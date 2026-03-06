@@ -296,7 +296,7 @@ function TagEditDialog({
   );
 }
 
-export default function TagManagement() {
+export default function TagManagement({ highlightTagId }: { highlightTagId?: string }) {
   const [tags, setTags] = useState<TagListItem[]>([]);
   const [treeData, setTreeData] = useState<TagTreeNode[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -343,6 +343,13 @@ export default function TagManagement() {
   useEffect(() => {
     loadTags();
   }, []);
+
+  useEffect(() => {
+    if (highlightTagId) {
+      const el = document.getElementById(`tag-${highlightTagId}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [highlightTagId, tags]);
 
   const handleCreateTag = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -562,11 +569,12 @@ export default function TagManagement() {
                 if (!tagSearch.trim()) return true;
                 const q = tagSearch.toLowerCase();
                 return tag.name.toLowerCase().includes(q) ||
-                  tag.aliases.some(a => a.toLowerCase().includes(q));
+                  (tag.aliases ?? []).some(a => a.toLowerCase().includes(q));
               }).map((tag) => (
                 <div
                   key={tag.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors group"
+                  id={`tag-${tag.id}`}
+                  className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors group ${tag.id === highlightTagId ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {tag.color && (

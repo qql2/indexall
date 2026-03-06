@@ -599,6 +599,60 @@ func (s *ResourceService) queryByTag(ctx context.Context, tq *indexallv1.TagQuer
 	return resources, total, nil
 }
 
+// queryByKeywordDirect handles keyword search with DIRECT tag scope.
+// Searches resource title/description AND tag names/aliases.
+func (s *ResourceService) queryByKeywordDirect(ctx context.Context, kq *indexallv1.KeywordQuery, likeKeyword string, offset, limit int32) ([]gen.Resource, int64, error) {
+	tagMatchSub := `r.id IN (
+		SELECT rt.resource_id FROM resource_tags rt
+		JOIN tags t ON rt.tag_id = t.id
+		LEFT JOIN tag_aliases ta ON t.id = ta.tag_id
+		WHERE t.name LIKE ? OR ta.alias LIKE ?
+	)`
+
+	var matchCond string
+	var params []any
+	switch kq.FieldScope {
+	case indexallv1.KeywordQuery_ALL:
+		matchCond = "(r.title LIKE ? OR r.description LIKE ? OR " + tagMatchSub + ")"
+		params = []any{likeKeyword, likeKeyword, likeKeyword, likeKeyword}
+	case indexallv1.KeywordQuery_TITLE:
+		matchCond = "(r.title LIKE ? OR " + tagMatchSub + ")"
+		params = []any{likeKeyword, likeKeyword, likeKeyword}
+	case indexallv1.KeywordQuery_DESCRIPTION:
+		matchCond = "(r.description LIKE ? OR " + tagMatchSub + ")"
+		params = []any{likeKeyword, likeKeyword, likeKeyword}
+	default:
+		return nil, 0, status.Error(codes.InvalidArgument, "invalid field_scope")
+	}
+
+	var total int64
+	if err := s.db.QueryRowContext(ctx, "SELECT COUNT(DISTINCT r.id) FROM resources r WHERE "+matchCond, params...).Scan(&total); err != nil && err != sql.ErrNoRows {
+		return nil, 0, status.Errorf(codes.Internal, "failed to count resources: %v", err)
+	}
+
+	dataParams := make([]any, 0, len(params)+2)
+	dataParams = append(dataParams, params...)
+	dataParams = append(dataParams, limit, offset)
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT DISTINCT r.id, r.source, r.external_id, r.title, r.description, r.url, r.open_with, r.metadata, r.status, r.synced_at, r.created_at, r.updated_at
+		FROM resources r WHERE `+matchCond+` ORDER BY r.created_at DESC LIMIT ? OFFSET ?`,
+		dataParams...)
+	if err != nil {
+		return nil, 0, status.Errorf(codes.Internal, "failed to query resources: %v", err)
+	}
+	defer rows.Close()
+
+	var resources []gen.Resource
+	for rows.Next() {
+		var r gen.Resource
+		if err := rows.Scan(&r.ID, &r.Source, &r.ExternalID, &r.Title, &r.Description, &r.Url, &r.OpenWith, &r.Metadata, &r.Status, &r.SyncedAt, &r.CreatedAt, &r.UpdatedAt); err != nil {
+			return nil, 0, status.Errorf(codes.Internal, "failed to scan resource: %v", err)
+		}
+		resources = append(resources, r)
+	}
+	return resources, total, nil
+}
+
 // queryByKeyword queries resources by keyword using LIKE (FTS5 fallback).
 // Empty keyword returns all resources.
 func (s *ResourceService) queryByKeyword(ctx context.Context, kq *indexallv1.KeywordQuery, offset, limit int32) ([]gen.Resource, int64, error) {
@@ -608,6 +662,11 @@ func (s *ResourceService) queryByKeyword(ctx context.Context, kq *indexallv1.Key
 
 	// Use LIKE for keyword matching (FTS5 fallback)
 	likeKeyword := "%" + kq.Keyword + "%"
+
+	// DIRECT scope: use dedicated handler that also searches tag names/aliases
+	if kq.TagScope == indexallv1.KeywordQuery_DIRECT {
+		return s.queryByKeywordDirect(ctx, kq, likeKeyword, offset, limit)
+	}
 
 	// Build WHERE clause based on field scope
 	var whereClause string
@@ -625,10 +684,6 @@ func (s *ResourceService) queryByKeyword(ctx context.Context, kq *indexallv1.Key
 	// Build tag scope recursion (without WHERE keyword)
 	var tagScopeClause string
 	switch kq.TagScope {
-	case indexallv1.KeywordQuery_DIRECT:
-		tagScopeClause = `rt.tag_id IN (
-			SELECT DISTINCT rt2.tag_id FROM resource_tags rt2
-		)`
 	case indexallv1.KeywordQuery_WITH_ANCESTORS:
 		tagScopeClause = `rt.tag_id IN (
 			WITH RECURSIVE ancestors AS (
@@ -666,22 +721,13 @@ func (s *ResourceService) queryByKeyword(ctx context.Context, kq *indexallv1.Key
 		JOIN resource_tags rt ON r.id = rt.resource_id
 		WHERE ` + whereClause + ` AND ` + tagScopeClause
 
+	// At this point TagScope is WITH_ANCESTORS or WITH_DESCENDANTS (DIRECT is handled above)
 	var total int64
 	var countErr error
 	if kq.FieldScope == indexallv1.KeywordQuery_ALL {
-		// ALL: need two parameters
-		if kq.TagScope == indexallv1.KeywordQuery_DIRECT {
-			countErr = s.db.QueryRowContext(ctx, countQuery, likeKeyword, likeKeyword).Scan(&total)
-		} else {
-			countErr = s.db.QueryRowContext(ctx, countQuery, likeKeyword, likeKeyword, likeKeyword, likeKeyword).Scan(&total)
-		}
+		countErr = s.db.QueryRowContext(ctx, countQuery, likeKeyword, likeKeyword, likeKeyword, likeKeyword).Scan(&total)
 	} else {
-		// TITLE or DESCRIPTION: single parameter
-		if kq.TagScope == indexallv1.KeywordQuery_DIRECT {
-			countErr = s.db.QueryRowContext(ctx, countQuery, likeKeyword).Scan(&total)
-		} else {
-			countErr = s.db.QueryRowContext(ctx, countQuery, likeKeyword, likeKeyword).Scan(&total)
-		}
+		countErr = s.db.QueryRowContext(ctx, countQuery, likeKeyword, likeKeyword).Scan(&total)
 	}
 	if countErr != nil && countErr != sql.ErrNoRows {
 		return nil, 0, status.Errorf(codes.Internal, "failed to count resources: %v", countErr)
@@ -702,19 +748,9 @@ func (s *ResourceService) queryByKeyword(ctx context.Context, kq *indexallv1.Key
 	var rows *sql.Rows
 	var queryErr error
 	if kq.FieldScope == indexallv1.KeywordQuery_ALL {
-		// ALL: need two parameters + LIMIT/OFFSET
-		if kq.TagScope == indexallv1.KeywordQuery_DIRECT {
-			rows, queryErr = s.db.QueryContext(ctx, dataQuery, likeKeyword, likeKeyword, limit, offset)
-		} else {
-			rows, queryErr = s.db.QueryContext(ctx, dataQuery, likeKeyword, likeKeyword, likeKeyword, likeKeyword, limit, offset)
-		}
+		rows, queryErr = s.db.QueryContext(ctx, dataQuery, likeKeyword, likeKeyword, likeKeyword, likeKeyword, limit, offset)
 	} else {
-		// TITLE or DESCRIPTION: single parameter + LIMIT/OFFSET
-		if kq.TagScope == indexallv1.KeywordQuery_DIRECT {
-			rows, queryErr = s.db.QueryContext(ctx, dataQuery, likeKeyword, limit, offset)
-		} else {
-			rows, queryErr = s.db.QueryContext(ctx, dataQuery, likeKeyword, likeKeyword, limit, offset)
-		}
+		rows, queryErr = s.db.QueryContext(ctx, dataQuery, likeKeyword, likeKeyword, limit, offset)
 	}
 	if queryErr != nil {
 		return nil, 0, status.Errorf(codes.Internal, "failed to query resources: %v", queryErr)

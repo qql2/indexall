@@ -165,11 +165,14 @@ export const tagApi = {
 
   getTree: () => makeRequest<GetTreeResponse>("GET", "/tags/tree"),
 
-  search: (query: string) =>
-    makeRequest<SearchTagsResponse>(
-      "GET",
-      `/tags/search?query=${encodeURIComponent(query)}`,
-    ),
+  search: (req: SearchTagsRequest | string) => {
+    const r: SearchTagsRequest = typeof req === "string" ? { query: req } : req;
+    const params = new URLSearchParams({ query: r.query });
+    if (r.tag_scope) params.set("tag_scope", r.tag_scope);
+    if (r.limit != null) params.set("limit", String(r.limit));
+    if (r.offset != null) params.set("offset", String(r.offset));
+    return makeRequest<SearchTagsResponse>("GET", `/tags/search?${params}`);
+  },
 
   addAlias: (tagId: string, alias: string) =>
     makeRequest<AddAliasResponse>("POST", `/tags/${tagId}/aliases`, { alias }),

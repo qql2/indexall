@@ -245,7 +245,7 @@ function EditResourceDialog({
   );
 }
 
-export default function ResourceManagement({ searchQuery = '' }: { searchQuery?: string }) {
+export default function ResourceManagement({ highlightResourceId }: { highlightResourceId?: string }) {
   const [resources, setResources] = useState<ResourceListItem[]>([]);
   const [allTags, setAllTags] = useState<TagListItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -258,7 +258,6 @@ export default function ResourceManagement({ searchQuery = '' }: { searchQuery?:
   const [selectedFilterTag, setSelectedFilterTag] = useState<string | null>(null);
   const [editingResource, setEditingResource] = useState<ResourceListItem | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [isSearchMode, setIsSearchMode] = useState(false);
 
   const loadResources = async (tagId?: string) => {
     setLoading(true);
@@ -285,43 +284,13 @@ export default function ResourceManagement({ searchQuery = '' }: { searchQuery?:
     loadResources();
   }, []);
 
-  // Handle search query changes
+  // Scroll to highlighted resource when it appears in the list
   useEffect(() => {
-    if (searchQuery.trim()) {
-      setIsSearchMode(true);
-      setLoading(true);
-      setError(null);
-      resourceApi
-        .search({
-          query: searchQuery,
-          page: 1,
-          page_size: 50,
-        })
-        .then((response) => {
-          // Search returns ResourceSearchResult which has TagInfo in tags (no color)
-          // We need to map tags back to ResourceTag format for display
-          const items = response.items.map((item) => ({
-            id: item.id,
-            source: item.source,
-            title: item.title,
-            description: item.description,
-            url: item.url,
-            status: 1 as const, // Default to ACTIVE
-            createdAt: item.createdAt,
-            tags: item.tags as any, // TagInfo is compatible for display purposes
-          }));
-          setResources(items);
-          setLoading(false);
-        })
-        .catch((err) => {
-          setError(err instanceof Error ? err.message : 'Search failed');
-          setLoading(false);
-        });
-    } else {
-      setIsSearchMode(false);
-      loadResources(selectedFilterTag || undefined);
+    if (highlightResourceId) {
+      const el = document.getElementById(`resource-${highlightResourceId}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [searchQuery]);
+  }, [highlightResourceId, resources]);
 
   const handleCreateResource = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -428,18 +397,8 @@ export default function ResourceManagement({ searchQuery = '' }: { searchQuery?:
         </Alert>
       )}
 
-      {/* Search Mode Indicator */}
-      {isSearchMode && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Showing search results for: <strong>{searchQuery}</strong>
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* Tag Filter */}
-      {!isSearchMode && allTags.length > 0 && (
+      {allTags.length > 0 && (
         <div className="flex gap-2 flex-wrap items-center">
           <span className="text-sm text-gray-600">Filter by tag:</span>
           <Button
@@ -487,7 +446,11 @@ export default function ResourceManagement({ searchQuery = '' }: { searchQuery?:
       ) : (
         <div className="grid gap-4">
           {resources.map((resource) => (
-            <Card key={resource.id} className="hover:shadow-md transition-shadow group">
+            <Card
+              key={resource.id}
+              id={`resource-${resource.id}`}
+              className={`hover:shadow-md transition-shadow group ${resource.id === highlightResourceId ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
+            >
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
