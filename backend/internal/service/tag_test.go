@@ -66,7 +66,7 @@ func TestSearchTagsDirect(t *testing.T) {
 	setupTagTestData(t, q)
 
 	ctx := context.Background()
-	service := NewTagService(database, q)
+	service := NewTagService(database, q, nil)
 
 	// Search by exact tag name
 	req := &indexallv1.SearchTagsRequest{
@@ -107,7 +107,7 @@ func TestSearchTagsWithAncestors(t *testing.T) {
 	setupTagTestData(t, q)
 
 	ctx := context.Background()
-	service := NewTagService(database, q)
+	service := NewTagService(database, q, nil)
 
 	// Search including ancestor tags
 	req := &indexallv1.SearchTagsRequest{
@@ -136,7 +136,7 @@ func TestSearchTagsByAlias(t *testing.T) {
 	setupTagTestData(t, q)
 
 	ctx := context.Background()
-	service := NewTagService(database, q)
+	service := NewTagService(database, q, nil)
 
 	// Search by alias
 	req := &indexallv1.SearchTagsRequest{
@@ -166,7 +166,7 @@ func TestSearchTagsPagination(t *testing.T) {
 	setupTagTestData(t, q)
 
 	ctx := context.Background()
-	service := NewTagService(database, q)
+	service := NewTagService(database, q, nil)
 
 	// Search with limit
 	req := &indexallv1.SearchTagsRequest{
@@ -197,7 +197,7 @@ func TestSearchTagsEmpty(t *testing.T) {
 	defer database.Close()
 
 	ctx := context.Background()
-	service := NewTagService(database, q)
+	service := NewTagService(database, q, nil)
 
 	req := &indexallv1.SearchTagsRequest{
 		Query: "",
@@ -220,7 +220,7 @@ func TestSearchTagsDefaultLimit(t *testing.T) {
 	setupTagTestData(t, q)
 
 	ctx := context.Background()
-	service := NewTagService(database, q)
+	service := NewTagService(database, q, nil)
 
 	req := &indexallv1.SearchTagsRequest{
 		Query: "g",
@@ -267,7 +267,7 @@ func TestSearchTagsResourceCount(t *testing.T) {
 		t.Fatalf("failed to add tag to resource: %v", err)
 	}
 
-	service := NewTagService(database, q)
+	service := NewTagService(database, q, nil)
 
 	req := &indexallv1.SearchTagsRequest{
 		Query: "Programming",
@@ -302,7 +302,7 @@ func TestSearchTagsAliasIncluded(t *testing.T) {
 	setupTagTestData(t, q)
 
 	ctx := context.Background()
-	service := NewTagService(database, q)
+	service := NewTagService(database, q, nil)
 
 	req := &indexallv1.SearchTagsRequest{
 		Query: "Program",
@@ -337,7 +337,7 @@ func BenchmarkSearchTags(b *testing.B) {
 	setupTagTestData(&testing.T{}, q)
 
 	ctx := context.Background()
-	service := NewTagService(database, q)
+	service := NewTagService(database, q, nil)
 
 	req := &indexallv1.SearchTagsRequest{
 		Query: "Program",

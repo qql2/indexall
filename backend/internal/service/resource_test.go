@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -13,10 +14,11 @@ import (
 	"github.com/google/uuid"
 )
 
-// setupTestDB creates an in-memory SQLite database for testing
+// setupTestDB creates an in-memory SQLite database for testing.
+// Uses a named shared-cache URI so nested queries within the same test
+// see the same database regardless of which connection they use.
 func setupTestDB(t *testing.T) (*sql.DB, *gen.Queries) {
-	// Use in-memory database for testing
-	dbPath := ":memory:"
+	dbPath := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
 	database, err := db.InitDB(dbPath)
 	if err != nil {
 		t.Fatalf("failed to init test database: %v", err)
@@ -115,7 +117,7 @@ func TestQueryByTagDirect(t *testing.T) {
 	_, pythonTagID, _, _ := setupTestData(t, q)
 
 	ctx := context.Background()
-	service := NewResourceService(database, q)
+	service := NewResourceService(database, q, nil)
 
 	// Query by tag with DIRECT scope
 	req := &indexallv1.ResourceQueryRequest{
@@ -164,7 +166,7 @@ func TestQueryByTagWithDescendants(t *testing.T) {
 	learningTagID, _, _, _ := setupTestData(t, q)
 
 	ctx := context.Background()
-	service := NewResourceService(database, q)
+	service := NewResourceService(database, q, nil)
 
 	// Query by tag with WITH_DESCENDANTS scope
 	req := &indexallv1.ResourceQueryRequest{
@@ -201,7 +203,7 @@ func TestQueryByKeywordTitle(t *testing.T) {
 	setupTestData(t, q)
 
 	ctx := context.Background()
-	service := NewResourceService(database, q)
+	service := NewResourceService(database, q, nil)
 
 	// Query by keyword in title
 	req := &indexallv1.ResourceQueryRequest{
@@ -242,7 +244,7 @@ func TestQueryByKeywordDescription(t *testing.T) {
 	setupTestData(t, q)
 
 	ctx := context.Background()
-	service := NewResourceService(database, q)
+	service := NewResourceService(database, q, nil)
 
 	// Query by keyword in description
 	req := &indexallv1.ResourceQueryRequest{
@@ -279,7 +281,7 @@ func TestQueryByKeywordAll(t *testing.T) {
 	setupTestData(t, q)
 
 	ctx := context.Background()
-	service := NewResourceService(database, q)
+	service := NewResourceService(database, q, nil)
 
 	// Query by keyword in all fields
 	req := &indexallv1.ResourceQueryRequest{
@@ -313,7 +315,7 @@ func TestQueryPagination(t *testing.T) {
 	_, pythonTagID, _, _ := setupTestData(t, q)
 
 	ctx := context.Background()
-	service := NewResourceService(database, q)
+	service := NewResourceService(database, q, nil)
 
 	// Query with page size 1
 	req := &indexallv1.ResourceQueryRequest{
@@ -364,7 +366,7 @@ func TestQueryTagInfo(t *testing.T) {
 	_, pythonTagID, _, _ := setupTestData(t, q)
 
 	ctx := context.Background()
-	service := NewResourceService(database, q)
+	service := NewResourceService(database, q, nil)
 
 	req := &indexallv1.ResourceQueryRequest{
 		Query: &indexallv1.ResourceQueryRequest_TagQuery{
@@ -402,7 +404,7 @@ func TestQueryInvalidTagID(t *testing.T) {
 	defer database.Close()
 
 	ctx := context.Background()
-	service := NewResourceService(database, q)
+	service := NewResourceService(database, q, nil)
 
 	req := &indexallv1.ResourceQueryRequest{
 		Query: &indexallv1.ResourceQueryRequest_TagQuery{
@@ -427,7 +429,7 @@ func TestQueryEmptyKeyword(t *testing.T) {
 	defer database.Close()
 
 	ctx := context.Background()
-	service := NewResourceService(database, q)
+	service := NewResourceService(database, q, nil)
 
 	req := &indexallv1.ResourceQueryRequest{
 		Query: &indexallv1.ResourceQueryRequest_KeywordQuery{
@@ -453,7 +455,7 @@ func TestQueryNoQuery(t *testing.T) {
 	defer database.Close()
 
 	ctx := context.Background()
-	service := NewResourceService(database, q)
+	service := NewResourceService(database, q, nil)
 
 	req := &indexallv1.ResourceQueryRequest{
 		Query:    nil,
@@ -475,7 +477,7 @@ func TestQueryDefaultPageSize(t *testing.T) {
 	_, pythonTagID, _, _ := setupTestData(t, q)
 
 	ctx := context.Background()
-	service := NewResourceService(database, q)
+	service := NewResourceService(database, q, nil)
 
 	req := &indexallv1.ResourceQueryRequest{
 		Query: &indexallv1.ResourceQueryRequest_TagQuery{
@@ -506,7 +508,7 @@ func BenchmarkQueryByTag(b *testing.B) {
 	_, pythonTagID, _, _ := setupTestData(&testing.T{}, q)
 
 	ctx := context.Background()
-	service := NewResourceService(database, q)
+	service := NewResourceService(database, q, nil)
 
 	req := &indexallv1.ResourceQueryRequest{
 		Query: &indexallv1.ResourceQueryRequest_TagQuery{
@@ -533,7 +535,7 @@ func BenchmarkQueryByKeyword(b *testing.B) {
 	setupTestData(&testing.T{}, q)
 
 	ctx := context.Background()
-	service := NewResourceService(database, q)
+	service := NewResourceService(database, q, nil)
 
 	req := &indexallv1.ResourceQueryRequest{
 		Query: &indexallv1.ResourceQueryRequest_KeywordQuery{

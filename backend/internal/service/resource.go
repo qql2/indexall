@@ -446,8 +446,7 @@ func (s *ResourceService) Query(ctx context.Context, req *indexallv1.ResourceQue
 	case *indexallv1.ResourceQueryRequest_KeywordQuery:
 		resources, total, err = s.queryByKeyword(ctx, queryType.KeywordQuery, offset, pageSize)
 	default:
-		// No query specified - return all resources with default pagination
-		resources, total, err = s.listAllResources(ctx, offset, pageSize)
+		return nil, status.Error(codes.InvalidArgument, "query is required")
 	}
 
 	if err != nil {
@@ -601,9 +600,8 @@ func (s *ResourceService) queryByTag(ctx context.Context, tq *indexallv1.TagQuer
 
 // queryByKeyword queries resources by keyword using LIKE (FTS5 fallback)
 func (s *ResourceService) queryByKeyword(ctx context.Context, kq *indexallv1.KeywordQuery, offset, limit int32) ([]gen.Resource, int64, error) {
-	// Empty keyword matches all resources
 	if kq.Keyword == "" {
-		return s.listAllResources(ctx, offset, limit)
+		return nil, 0, status.Error(codes.InvalidArgument, "keyword is required")
 	}
 
 	// Use LIKE for keyword matching (FTS5 fallback)
